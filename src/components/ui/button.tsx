@@ -12,6 +12,8 @@ const buttonVariants = cva(
         default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
         mybutton: "bg-slate-800 text-white hover:bg-white hover:text-slate-800 active:bg-white active:text-slate-800 border border-slate-400",
         mycancel: "bg-white text-slate-800 hover:bg-slate-800 hover:text-white active:bg-slate-800 active:text-white border border-slate-400",
+        sidebar: "w-full justify-start text-white hover:bg-slate-700 hover:text-white active:bg-slate-700 active:text-white rounded-none border-none",
+        usernav: "bg-white text-slate-700 hover:bg-white hover:text-slate-700 border border-slate-400",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
