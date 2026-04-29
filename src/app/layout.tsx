@@ -8,11 +8,12 @@ const poppins = Poppins({
   subsets: ["latin"],
 });
 
+
 export const metadata: Metadata = {
   title: "Doc-Reviewer",
   description: "",
   icons: {
-    icon: "/icon.png",
+    icon: "/images/browser-icon.png",
   },
 };
 
