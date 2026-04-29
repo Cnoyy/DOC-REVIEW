@@ -25,7 +25,7 @@ export function middleware(request: NextRequest) {
   if (authPaths.some((path) => pathname.startsWith(path))) {
     if (hasAuthSession) {
       const url = request.nextUrl.clone();
-      url.pathname = "/dashboard";
+      url.pathname = "/dashboard/upload";
       return NextResponse.redirect(url);
     }
   }

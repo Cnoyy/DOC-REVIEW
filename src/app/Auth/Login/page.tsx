@@ -44,7 +44,7 @@ export default function LoginPage() {
     if (res.success && res.user) {
       showSuccessToast("Login successful!");
       setUser(res.user);
-      router.push("/dashboard");
+      router.push("/dashboard/upload");
     } else {
       showErrorToast(res.error || "Failed to login");
     }
