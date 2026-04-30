@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { sidebar as s } from "@/lib/theme";
 import { useRouter } from "next/navigation";
 import { logoutUser } from "@/service/auth";
+import { useAuthStore } from "@/store/auth-store";
 
 interface UserNavProps {
  isCollapsed?: boolean;
@@ -15,6 +16,7 @@ export function UserNav({ isCollapsed = false }: UserNavProps) {
  const [isOpen, setIsOpen] = useState(false);
  const containerRef = useRef<HTMLDivElement>(null);
  const router = useRouter();
+ const { user } = useAuthStore();
 
  const handleLogout = async () => {
   try {
@@ -69,7 +71,7 @@ export function UserNav({ isCollapsed = false }: UserNavProps) {
  <div className={s.userNavAvatar}>S</div>
 
  <div className={cn(s.userNavInfo, isCollapsed ? s.userNavInfoCollapsed : s.userNavInfoExpanded)}>
- <p className={s.userNavName}>shinoy</p>
+ <p className={s.userNavName}>{user?.firstName || user?.email?.split('@')[0] || 'User'}</p>
  <p className={s.userNavCaption}>Account</p>
  </div>
 

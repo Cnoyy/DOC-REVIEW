@@ -9,6 +9,6 @@ export const showErrorToast = (message: string) => {
         <span className="font-semibold text-sm">{message}</span>
       </div>
     ),
-    { position: "top-center", duration: 4000 }
+    { position: "top-center", duration: 2000 }
   );
 };
