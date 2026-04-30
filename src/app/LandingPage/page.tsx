@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
+import { DocReviewLogo } from "@/components/dashboard/logo";
 
 export default function LandingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -11,14 +12,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#faf9f7] text-[#1a1a1a] flex flex-col font-sans">
       <nav className="flex items-center justify-between px-[6%] py-5 border-b border-[#e8e4df] relative bg-[#faf9f7] z-50">
-        <Link href="/" className="flex items-center text-lg font-bold tracking-tight text-[#1a1a1a] cursor-pointer">
-          <img
-            src="../images/browser-icon.png"
-            alt=""
-            className="w-5 h-5 mr-1"
-          />
-          DocuReview<span className="text-[#c96442]">.</span>
-        </Link>
+        <DocReviewLogo destination="/" textColor="text-slate-700" />
 
         <div className="max-md:hidden flex items-center gap-3">
           <Button

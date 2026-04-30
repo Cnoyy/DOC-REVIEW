@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import Link from "next/link";
+import { DocReviewLogo } from "@/components/dashboard/logo";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -62,14 +63,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#faf9f7] p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 border border-[#e8e4df]">
         <div className="text-center mb-8">
-          <Link href="/" className="flex items-center justify-center text-xl font-bold tracking-tight text-[#1a1a1a] mb-2 cursor-pointer">
-            <img
-              src="/images/browser-icon.png"
-              alt="DocuReview"
-              className="w-6 h-6 mr-2"
-            />
-            DocuReview<span className="text-[#c96442]">.</span>
-          </Link>
+          <DocReviewLogo destination="/" textColor="text-slate-700" className="justify-center" />
           <p className="text-gray-500 text-sm mt-2">
             Sign in to your account to continue
           </p>

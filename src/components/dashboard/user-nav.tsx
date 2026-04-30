@@ -1,59 +1,86 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDown, User } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { ChevronDown, User, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { sidebar as s } from "@/lib/theme";
+import { useRouter } from "next/navigation";
+import { logoutUser } from "@/service/auth";
 
 interface UserNavProps {
-  isCollapsed?: boolean;
+ isCollapsed?: boolean;
 }
 
 export function UserNav({ isCollapsed = false }: UserNavProps) {
-  const [isOpen, setIsOpen] = useState(false);
+ const [isOpen, setIsOpen] = useState(false);
+ const containerRef = useRef<HTMLDivElement>(null);
+ const router = useRouter();
 
-  return (
-    <div className="relative">
-      {!isCollapsed && (
-        <div
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex w-full cursor-pointer items-center justify-start gap-3 bg-slate-600 py-3 px-4"
-        >
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-400 font-semibold text-slate-800">
-            S
-          </div>
-          <div className="flex-1 text-left">
-            <p className="text-sm font-medium text-white">shinoy</p>
-            <p className="text-xs text-gray-200">Account</p>
-          </div>
-          <ChevronDown
-            className={cn(
-              "h-4 w-4 text-gray-200 transition-transform",
-              isOpen && "rotate-180"
-            )}
-          />
-        </div>
-      )}
+ const handleLogout = async () => {
+  try {
+    await logoutUser();
+    // Clear client-side auth store
+    const { useAuthStore } = await import("@/store/auth-store");
+    useAuthStore.getState().logout();
+    router.push("/");
+  } catch (error) {
+    console.error("Logout error:", error);
+  }
+ };
 
-      {isOpen && (
-        <div className="absolute bottom-full left-2 right-2 mb-2 bg-slate-600 rounded-lg shadow-lg border border-slate-400 py-2">
-          <button className="flex items-center gap-3 w-full px-4 py-2 text-sm text-white hover:bg-slate-700 transition-colors">
-            <User className="h-4 w-4" />
-            Account
-          </button>
-          <button className="flex items-center gap-3 w-full px-4 py-2 text-sm text-white hover:bg-slate-700 transition-colors">
-            Log out
-          </button>
-        </div>
-      )}
+ useEffect(() => {
+ function handleClickOutside(e: MouseEvent) {
+ if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+ setIsOpen(false);
+ }
+ }
+ if (isOpen) document.addEventListener("mousedown", handleClickOutside);
+ return () => document.removeEventListener("mousedown", handleClickOutside);
+ }, [isOpen]);
 
-      {isCollapsed && (
-        <div className="absolute bottom-4 left-1/2 right-1/2 transform -translate-x-1/2 flex items-center justify-center">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-400">
-            <User className="h-5 w-5 text-slate-800" />
-          </div>
-        </div>
-      )}
-    </div>
-  );
+ useEffect(() => {
+ if (isCollapsed) setIsOpen(false);
+ }, [isCollapsed]);
+
+ return (
+ <div ref={containerRef} className={s.userNavRoot}>
+ {/* Dropdown card — floats above trigger, no layout shift */}
+ {isOpen && (
+ <div className={s.userNavDropdown}>
+ <button className={s.userNavDropdownItem}>
+ <User className="h-4 w-4 shrink-0" />
+ <span>Account</span>
+ </button>
+ <button className={s.userNavDropdownItem} onClick={handleLogout}>
+ <LogOut className="h-4 w-4 shrink-0" />
+ <span>Log out</span>
+ </button>
+ </div>
+ )}
+
+ {/* Trigger — border-t keeps the separator line fixed at bottom */}
+ <button
+ onClick={() => !isCollapsed && setIsOpen((o) => !o)}
+ className={cn(
+ s.userNavTrigger,
+ isCollapsed ? s.userNavTriggerCollapsed : s.userNavTriggerExpanded
+ )}
+ >
+ <div className={s.userNavAvatar}>S</div>
+
+ <div className={cn(s.userNavInfo, isCollapsed ? s.userNavInfoCollapsed : s.userNavInfoExpanded)}>
+ <p className={s.userNavName}>shinoy</p>
+ <p className={s.userNavCaption}>Account</p>
+ </div>
+
+ <ChevronDown
+ className={cn(
+ "h-4 w-4 text-slate-400 shrink-0 transition-all duration-300",
+ isCollapsed ? "opacity-0 w-0" : "opacity-100 ml-auto",
+ isOpen && "rotate-180"
+ )}
+ />
+ </button>
+ </div>
+ );
 }
