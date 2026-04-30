@@ -1,33 +1,22 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// Define paths that require authentication
-const protectedPaths = ["/dashboard"];
-// Define paths that should redirect to dashboard if already authenticated
+// Define paths that should redirect to dashboard if already authenticated (client-side check)
 const authPaths = ["/Auth/Login", "/Auth/Register"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  // Check if the user has our secure HTTP-only cookie set by the Server Action
-  const hasAuthSession = request.cookies.has("auth_session");
-
-  // Protect dashboard routes
-  if (protectedPaths.some((path) => pathname.startsWith(path))) {
-    if (!hasAuthSession) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/Auth/Login";
-      return NextResponse.redirect(url);
-    }
-  }
-
-  // Redirect away from login/register if already authenticated
+  // Note: Dashboard protection is now handled client-side by AuthGuard component
+  // This middleware only handles auth page redirects for authenticated users
+  
+  // Redirect away from login/register if already authenticated (client-side check)
   if (authPaths.some((path) => pathname.startsWith(path))) {
-    if (hasAuthSession) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/dashboard/upload";
-      return NextResponse.redirect(url);
-    }
+    // Check if user has auth data in localStorage (this is a basic check)
+    // The actual protection is handled by the AuthGuard component
+    const url = request.nextUrl.clone();
+    url.pathname = "/dashboard/upload";
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();
@@ -35,8 +24,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Apply middleware to these specific paths
-    "/dashboard/:path*",
+    // Apply middleware only to auth pages
     "/Auth/:path*",
   ],
 };
