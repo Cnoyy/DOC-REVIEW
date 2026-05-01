@@ -4,30 +4,33 @@ import { z } from 'zod';
 // Mock AI suggestion response type
 interface AISuggestionResponse {
   summary: string;
-  riskFlags: string[];
+  riskFlags: Array<{
+    message: string;
+    priority: 'high' | 'medium' | 'low';
+  }>;
   recommendations: string[];
   moreSuggestions: string[];
 }
 
 // Mock data for development
 const mockAISuggestion: AISuggestionResponse = {
-  summary: "This document appears to be a DIPLOMA CERTIFICATE with standard formatting. The content includes educational credentials and professional achievements.",
+  summary: 'This document is a standard Non-Disclosure Agreement (NDA) between two parties regarding a potential software partnership. It outlines strict confidentiality obligations for a period of three years and specifies that all shared proprietary code remains the sole property of the disclosing party. Key clauses include a non-solicitation agreement and a defined dispute resolution process via arbitration.',
   riskFlags: [
-    "Document contains personal information",
-    "Missing verification elements",
-    "Standard formatting inconsistencies"
+    { message: 'Section 7.3 contains an unlimited liability clause exposing the company to uncapped financial risk.', priority: 'high' },
+    { message: 'Auto-renewal clause (Section 2.4) requires 90-day advance notice — above industry standard of 30–60 days.', priority: 'medium' },
+    { message: 'Governing law set to Delaware — favorable but confirm with legal counsel.', priority: 'low' }
   ],
   recommendations: [
-    "Verify document authenticity",
-    "Add watermark for security",
-    "Standardize formatting",
-    "Include verification QR code"
+    'Verify document authenticity',
+    'Add watermark for security',
+    'Standardize formatting',
+    'Include verification QR code'
   ],
   moreSuggestions: [
-    "Consider adding digital signature",
-    "Include blockchain verification",
-    "Add timestamp metadata",
-    "Implement multi-factor verification"
+    'Consider adding digital signature',
+    'Include blockchain verification',
+    'Add timestamp metadata',
+    'Implement multi-factor verification'
   ]
 };
 

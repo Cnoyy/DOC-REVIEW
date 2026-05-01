@@ -1,12 +1,18 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { UploadCloud, FileText, X, CheckCircle, ArrowRight, Bot, Send, X as XIcon, RotateCcw } from "lucide-react";
+import { UploadCloud, FileText, X, CheckCircle, ArrowRight, Bot, Send, RotateCcw, Plus, ThumbsUp, ThumbsDown, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MyDialog } from "@/components/ui/mydialog";
 import { layout as l, upload as u } from "@/lib/theme";
 import { useAuthStore } from "@/store/auth-store";
 import { DocReviewLogo } from "@/components/dashboard/logo";
 import { useAISuggestions } from "@/hooks/useAisuggestions";
+import { showSuccessToast } from "@/components/toasts/SuccessToast";
+import { showErrorToast } from "@/components/toasts/ErrorToast";
+import { showValidationToast } from "@/components/toasts/ValidationToast";
+import { reviewerEmailSchema } from "@/validation/auth";
+import { documentFileSchema } from "@/validation/document";
 
 interface UploadedFile {
   id: string;
@@ -23,6 +29,9 @@ export default function UploadPage() {
   const [isAISuggestionMode, setIsAISuggestionMode] = useState(false);
   const [generatedDocument, setGeneratedDocument] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showReviewerDialog, setShowReviewerDialog] = useState(false);
+  const [reviewerEmails, setReviewerEmails] = useState<string[]>(['']);
+  const [emailErrors, setEmailErrors] = useState<string[]>(['']);
   const { user } = useAuthStore();
   const aiSuggestions = useAISuggestions();
 
@@ -41,28 +50,50 @@ export default function UploadPage() {
     setIsDragging(false);
     
     const files = Array.from(e.dataTransfer.files);
-    const newFiles = files.map(file => ({
-      id: Math.random().toString(36).substr(2, 9),
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      uploaded: false
-    }));
+    const validFiles = [];
     
-    setUploadedFiles(prev => [...prev, ...newFiles]);
+    files.forEach(file => {
+      const result = documentFileSchema.safeParse(file);
+      if (result.success) {
+        validFiles.push({
+          id: Math.random().toString(36).substr(2, 9),
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          uploaded: false
+        });
+      } else {
+        showValidationToast(`${file.name}: ${result.error.errors?.[0]?.message || 'Invalid file type'}`);
+      }
+    });
+    
+    if (validFiles.length > 0) {
+      setUploadedFiles(prev => [...prev, ...validFiles]);
+    }
   }, []);
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const newFiles = files.map(file => ({
-      id: Math.random().toString(36).substr(2, 9),
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      uploaded: false
-    }));
+    const validFiles = [];
     
-    setUploadedFiles(prev => [...prev, ...newFiles]);
+    files.forEach(file => {
+      const result = documentFileSchema.safeParse(file);
+      if (result.success) {
+        validFiles.push({
+          id: Math.random().toString(36).substr(2, 9),
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          uploaded: false
+        });
+      } else {
+        showValidationToast(`${file.name}: ${result.error.errors?.[0]?.message || 'Invalid file type'}`);
+      }
+    });
+    
+    if (validFiles.length > 0) {
+      setUploadedFiles(prev => [...prev, ...validFiles]);
+    }
   }, []);
 
   const removeFile = useCallback((id: string) => {
@@ -164,12 +195,60 @@ This document was generated using AI analysis powered by DocuReview.
     setGeneratedDocument(null);
   }, [generatedDocument, uploadedFiles]);
 
+  const handleAddReviewerEmail = useCallback(() => {
+    setReviewerEmails([...reviewerEmails, '']);
+    setEmailErrors([...emailErrors, '']);
+  }, [reviewerEmails, emailErrors]);
+
+  const handleReviewerEmailChange = useCallback((index: number, value: string) => {
+    const newEmails = [...reviewerEmails];
+    newEmails[index] = value;
+    setReviewerEmails(newEmails);
+    
+    // Validate email
+    const result = reviewerEmailSchema.safeParse(value);
+    const newErrors = [...emailErrors];
+    if (!result.success && value !== '') {
+      newErrors[index] = result.error.errors?.[0]?.message || 'Please enter a valid email address';
+    } else {
+      newErrors[index] = '';
+    }
+    setEmailErrors(newErrors);
+  }, [reviewerEmails, emailErrors]);
+
+  const handleReviewerCancel = useCallback(() => {
+    setShowReviewerDialog(false);
+    setShowSubmitDialog(true);
+  }, []);
+
+  const handleReviewerSent = useCallback(() => {
+    // Validate all emails
+    const validEmails = reviewerEmails.filter(email => email.trim() !== '');
+    const hasErrors = emailErrors.some(error => error !== '');
+    
+    if (validEmails.length === 0) {
+      showValidationToast('Please enter at least one reviewer email');
+      return;
+    }
+    
+    if (hasErrors) {
+      showValidationToast('Please fix email validation errors');
+      return;
+    }
+    
+    setShowReviewerDialog(false);
+    showSuccessToast('Document sent to reviewer successfully!');
+    setUploadedFiles([]);
+    setReviewerEmails(['']);
+    setEmailErrors(['']);
+  }, [reviewerEmails, emailErrors]);
+
   return (
     <div className={l.page}>
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-1 mb-4">
-            <DocReviewLogo destination="/dashboard/upload" />
+            <DocReviewLogo destination="/dashboard/upload" showText={false} />
             <h1 className="text-2xl font-bold text-slate-800 mb-1">Welcome {user?.firstName || user?.email?.split('@')[0] || 'User'}</h1>
           </div>
           <p className="text-slate-600">Ready to upload your documents for AI review</p>
@@ -329,13 +408,35 @@ This document was generated using AI analysis powered by DocuReview.
                 </div>
                 
                 {aiSuggestions.suggestions?.riskFlags && aiSuggestions.suggestions.riskFlags.length > 0 && (
-                  <div className="bg-orange-50 rounded-lg p-4 border border-orange-100">
-                    <h3 className="text-sm font-medium text-orange-700 mb-2">Risk Flags</h3>
-                    <ul className="list-disc list-inside text-sm text-slate-600 space-y-1">
-                      {aiSuggestions.suggestions.riskFlags.map((flag, index) => (
-                        <li key={index}>{flag}</li>
-                      ))}
-                    </ul>
+                  <div className="rounded-lg p-4 border border-orange-100">
+                    <h3 className="text-sm font-medium text-red-600 mb-3">Risk Flags</h3>
+                    <div className="space-y-2">
+                      {aiSuggestions.suggestions.riskFlags.map((flag, index) => {
+                        const priorityStyles = {
+                          high: 'bg-red-50 border-red-200',
+                          medium: 'bg-yellow-50 border-yellow-200',
+                          low: 'bg-green-50 border-green-200'
+                        };
+                        const priorityLabelStyles = {
+                          high: 'bg-red-100 text-red-700',
+                          medium: 'bg-yellow-100 text-yellow-700',
+                          low: 'bg-green-100 text-green-700'
+                        };
+                        const priority = flag.priority || 'low';
+                        const priorityLabel = priority.charAt(0).toUpperCase() + priority.slice(1);
+                        return (
+                          <div
+                            key={index}
+                            className={`px-3 py-2 rounded-lg border text-sm ${priorityStyles[priority]}`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className={`font-medium text-xs px-2 py-1 rounded ${priorityLabelStyles[priority]}`}>{priorityLabel}</span>
+                              <span className="text-slate-700">{flag.message}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
                 
@@ -383,7 +484,8 @@ This document was generated using AI analysis powered by DocuReview.
                           onClick={handleDownload}
                           className="px-4 py-2 cursor-pointer"
                         >
-                          Download Document
+                          <Download className="h-4 w-4 mr-2" />
+                          Download
                         </Button>
                         <Button
                           variant="mycancel"
@@ -395,36 +497,35 @@ This document was generated using AI analysis powered by DocuReview.
                       </div>
                     </div>
                   ) : (
-                    <div className="flex justify-between items-start">
-                      <p className="text-sm text-slate-600 flex-1">
+                    <div className="flex flex-col">
+                      <p className="text-sm text-slate-600 whitespace-nowrap">
                         Would you like to generate an enhanced document with these AI suggestions?
                       </p>
-                      <div className="flex items-center gap-2 ml-4">
+                      <div className="flex items-center gap-2 mt-4">
                         <Button
-                          variant="mybutton"
                           onClick={handleAccept}
                           disabled={isGenerating}
-                          className="px-4 py-2 cursor-pointer"
+                          className="px-4 py-2 cursor-pointer bg-green-100 text-green-700 hover:bg-green-200 border border-green-300"
                         >
                           {isGenerating ? (
                             <>
-                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-transparent mr-2" />
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-green-300 border-t-transparent mr-2" />
                               Generating...
                             </>
                           ) : (
                             <>
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Accept & Generate
+                              <ThumbsUp className="h-4 w-4 mr-2" />
+                              Accept
                             </>
                           )}
                         </Button>
                         <Button
                           variant="mycancel"
                           onClick={handleDecline}
-                          className="px-4 py-2 hover:bg-slate-700 hover:text-white cursor-pointer"
+                          className="px-4 py-2 hover:bg-slate-700 hover:text-white cursor-pointer bg-red-100 text-red-700 hover:bg-red-200 border border-red-300"
                         >
-                          <X className="h-4 w-4 mr-2" />
-                          Decline & Clear
+                          <ThumbsDown className="h-4 w-4 mr-2" />
+                          Reject
                         </Button>
                       </div>
                     </div>
@@ -437,61 +538,116 @@ This document was generated using AI analysis powered by DocuReview.
       </div>
       
       {/* Submit Dialog */}
-      {showSubmitDialog && (
-        <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-[9999]">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xl p-8 w-full max-w-2xl relative">
-            <button
-              onClick={() => setShowSubmitDialog(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-            >
-              <XIcon className="h-5 w-5" />
-            </button>
-            
-            <div className="text-center">
-              <h2 className="text-xl font-semibold text-slate-900 mb-4">Submit Documents</h2>
-              
-              <p className="text-base text-slate-600 mb-6 leading-relaxed">
-                How would you like to process {uploadedFiles.length > 0 ? uploadedFiles[0].name : 'your document'}?
-              </p>
-            </div>
-              
-              <div className="space-y-3 w-full">
-                <Button
-                  variant="mycancel"
-                  className="w-full py-3 text-base flex items-center justify-center gap-2 bg-slate-500 text-white hover:bg-slate-600 hover:text-white cursor-pointer"
-                  onClick={() => {
-                    if (uploadedFiles.length > 0) {
-                      aiSuggestions.fetchAISuggestions(uploadedFiles[0].name);
-                      setIsAISuggestionMode(true);
-                    }
-                    setShowSubmitDialog(false);
-                  }}
-                  disabled={aiSuggestions.loading}
-                >
-                  {aiSuggestions.loading ? (
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-300" />
-                  ) : (
-                    <>
-                      <Bot className="h-4 w-4" />
-                      AI Suggestion
-                    </>
-                  )}
-                </Button>
-                <Button
-                  variant="mycancel"
-                  className="w-full py-3 text-base flex items-center justify-center gap-2 hover:bg-slate-500 hover:text-white cursor-pointer"
-                  onClick={() => {
-                    // Handle sent to reviewer logic here
-                    setShowSubmitDialog(false);
-                  }}
-                >
-                  <Send className="h-4 w-4" />
-                  Sent to Reviewer
-                </Button>
-              </div>
-            </div>
+      <MyDialog open={showSubmitDialog} onClose={() => setShowSubmitDialog(false)}>
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-slate-900 mb-4">Submit Documents</h2>
+          
+          <p className="text-base text-slate-600 mb-6 leading-relaxed">
+            How would you like to process {uploadedFiles.length > 0 ? uploadedFiles[0].name : 'your document'}?
+          </p>
         </div>
-      )}
+          
+          <div className="flex justify-center gap-3">
+            <Button
+              variant="mycancel"
+              className="py-3 text-base flex items-center justify-center gap-2 bg-slate-500 text-white hover:bg-slate-600 hover:text-white cursor-pointer px-6"
+              onClick={() => {
+                if (uploadedFiles.length > 1) {
+                  showValidationToast('Only one document can be processed at a time');
+                  return;
+                }
+                if (uploadedFiles.length > 0) {
+                  aiSuggestions.fetchAISuggestions(uploadedFiles[0].name);
+                  setIsAISuggestionMode(true);
+                }
+                setShowSubmitDialog(false);
+              }}
+              disabled={aiSuggestions.loading}
+            >
+              {aiSuggestions.loading ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-transparent" />
+              ) : (
+                <>
+                  <Bot className="h-4 w-4" />
+                  AI Suggestion
+                </>
+              )}
+            </Button>
+            
+            <Button
+              variant="mybutton"
+              className="py-3 text-base flex items-center justify-center gap-2 cursor-pointer px-6"
+              onClick={() => {
+                setShowSubmitDialog(false);
+                setShowReviewerDialog(true);
+              }}
+            >
+              <Send className="h-4 w-4" />
+              Sent to Reviewer
+            </Button>
+          </div>
+      </MyDialog>
+      
+      {/* Reviewer Dialog */}
+      <MyDialog open={showReviewerDialog} onClose={() => setShowReviewerDialog(false)}>
+        <div className="text-center mb-6">
+          <h2 className="text-xl font-semibold text-slate-900 mb-4">Send to Reviewer</h2>
+          <p className="text-base text-slate-600 leading-relaxed">
+            Enter reviewer email addresses to send your document for reviewing
+          </p>
+        </div>
+        
+        <div className="space-y-3 mb-6">
+          {reviewerEmails.map((email, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <div className="flex-1">
+                <input
+                  type="email"
+                  placeholder="Enter reviewer email"
+                  value={email}
+                  onChange={(e) => handleReviewerEmailChange(index, e.target.value)}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 text-sm ${
+                    emailErrors[index] 
+                      ? 'border-red-500 focus:ring-red-500' 
+                      : 'border-slate-300 focus:ring-slate-500'
+                  }`}
+                />
+                {emailErrors[index] && (
+                  <p className="text-red-500 text-xs mt-1">{emailErrors[index]}</p>
+                )}
+              </div>
+              {index === reviewerEmails.length - 1 && (
+                <button
+                  onClick={handleAddReviewerEmail}
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-500 text-white hover:bg-slate-600 transition-colors cursor-pointer"
+                  title="Add more reviewers"
+                >
+                  <Plus className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+        
+        <div className="flex justify-center gap-3">
+          <Button
+            variant="mycancel"
+            className="py-3 text-base flex items-center justify-center gap-2 cursor-pointer px-6"
+            onClick={handleReviewerCancel}
+          >
+            Cancel
+          </Button>
+          
+          <Button
+            variant="mybutton"
+            className="py-3 text-base flex items-center justify-center gap-2 cursor-pointer px-6"
+            onClick={handleReviewerSent}
+          >
+            <Send className="h-4 w-4" />
+            Sent
+          </Button>
+        </div>
+      </MyDialog>
       </div>
     </div>
   );
