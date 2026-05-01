@@ -1,11 +1,10 @@
 // Centralized API configuration
 export const API_CONFIG = {
-  BASE_URL: process.env.NODE_ENV === 'production' 
-    ? 'https://api.docureview.com/api' 
-    : 'http://localhost:3000/api',
+  BASE_URL: 'http://localhost:3000/api',
   
   ENDPOINTS: {
     AI_SUGGESTION: '/ai-suggestion',
+    SEND_TO_REVIEWER: '/send-to-reviewer',
     // Add other endpoints as needed
   }
 } as const;

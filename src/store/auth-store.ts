@@ -15,13 +15,32 @@ interface AuthState {
   logout: () => void;
 }
 
+// Helper functions to manage cookies
+const setAuthCookie = (user: User | null) => {
+  if (user && typeof window !== 'undefined') {
+    document.cookie = `auth-token=${user.id}; path=/; max-age=${60 * 60 * 24 * 7}; secure; samesite=strict`;
+  }
+};
+
+const removeAuthCookie = () => {
+  if (typeof window !== 'undefined') {
+    document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+  }
+};
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
       isAuthenticated: false,
-      setUser: (user) => set({ user, isAuthenticated: !!user }),
-      logout: () => set({ user: null, isAuthenticated: false }),
+      setUser: (user) => {
+        setAuthCookie(user);
+        set({ user, isAuthenticated: !!user });
+      },
+      logout: () => {
+        removeAuthCookie();
+        set({ user: null, isAuthenticated: false });
+      },
     }),
     {
       name: "auth-storage", // name of the item in the storage (must be unique)

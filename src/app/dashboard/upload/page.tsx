@@ -8,6 +8,7 @@ import { layout as l, upload as u } from "@/lib/theme";
 import { useAuthStore } from "@/store/auth-store";
 import { DocReviewLogo } from "@/components/dashboard/logo";
 import { useAISuggestions } from "@/hooks/useAisuggestions";
+import { useSendToReviewer } from "@/hooks/useSendToReviewer";
 import { showSuccessToast } from "@/components/toasts/SuccessToast";
 import { showErrorToast } from "@/components/toasts/ErrorToast";
 import { showValidationToast } from "@/components/toasts/ValidationToast";
@@ -34,6 +35,7 @@ export default function UploadPage() {
   const [emailErrors, setEmailErrors] = useState<string[]>(['']);
   const { user } = useAuthStore();
   const aiSuggestions = useAISuggestions();
+  const sendToReviewer = useSendToReviewer();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -50,7 +52,13 @@ export default function UploadPage() {
     setIsDragging(false);
     
     const files = Array.from(e.dataTransfer.files);
-    const validFiles = [];
+    const validFiles: Array<{
+      id: string;
+      name: string;
+      size: number;
+      type: string;
+      uploaded: boolean;
+    }> = [];
     
     files.forEach(file => {
       const result = documentFileSchema.safeParse(file);
@@ -63,7 +71,7 @@ export default function UploadPage() {
           uploaded: false
         });
       } else {
-        showValidationToast(`${file.name}: ${result.error.errors?.[0]?.message || 'Invalid file type'}`);
+        showValidationToast(`${file.name}: ${result.error.issues?.[0]?.message || 'Invalid file type'}`);
       }
     });
     
@@ -74,7 +82,13 @@ export default function UploadPage() {
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const validFiles = [];
+    const validFiles: Array<{
+      id: string;
+      name: string;
+      size: number;
+      type: string;
+      uploaded: boolean;
+    }> = [];
     
     files.forEach(file => {
       const result = documentFileSchema.safeParse(file);
@@ -87,7 +101,7 @@ export default function UploadPage() {
           uploaded: false
         });
       } else {
-        showValidationToast(`${file.name}: ${result.error.errors?.[0]?.message || 'Invalid file type'}`);
+        showValidationToast(`${file.name}: ${result.error.issues?.[0]?.message || 'Invalid file type'}`);
       }
     });
     
@@ -209,7 +223,7 @@ This document was generated using AI analysis powered by DocuReview.
     const result = reviewerEmailSchema.safeParse(value);
     const newErrors = [...emailErrors];
     if (!result.success && value !== '') {
-      newErrors[index] = result.error.errors?.[0]?.message || 'Please enter a valid email address';
+      newErrors[index] = result.error.issues?.[0]?.message || 'Please enter a valid email address';
     } else {
       newErrors[index] = '';
     }
@@ -221,7 +235,7 @@ This document was generated using AI analysis powered by DocuReview.
     setShowSubmitDialog(true);
   }, []);
 
-  const handleReviewerSent = useCallback(() => {
+  const handleReviewerSent = useCallback(async () => {
     // Validate all emails
     const validEmails = reviewerEmails.filter(email => email.trim() !== '');
     const hasErrors = emailErrors.some(error => error !== '');
@@ -236,12 +250,26 @@ This document was generated using AI analysis powered by DocuReview.
       return;
     }
     
-    setShowReviewerDialog(false);
-    showSuccessToast('Document sent to reviewer successfully!');
-    setUploadedFiles([]);
-    setReviewerEmails(['']);
-    setEmailErrors(['']);
-  }, [reviewerEmails, emailErrors]);
+    // Get the first uploaded file's ID as document ID
+    const documentId = uploadedFiles.length > 0 ? uploadedFiles[0].id : undefined;
+    
+    try {
+      const result = await sendToReviewer.sendToReviewer(validEmails, documentId, 'Please review this document');
+      
+      if (result?.success) {
+        setShowReviewerDialog(false);
+        showSuccessToast(result.message);
+        setUploadedFiles([]);
+        setReviewerEmails(['']);
+        setEmailErrors(['']);
+        sendToReviewer.clearResponse();
+      } else {
+        showErrorToast(result?.message || sendToReviewer.error || 'Failed to send document to reviewers');
+      }
+    } catch (error) {
+      showErrorToast('Failed to send document to reviewers');
+    }
+  }, [reviewerEmails, emailErrors, uploadedFiles, sendToReviewer]);
 
   return (
     <div className={l.page}>
@@ -642,9 +670,19 @@ This document was generated using AI analysis powered by DocuReview.
             variant="mybutton"
             className="py-3 text-base flex items-center justify-center gap-2 cursor-pointer px-6"
             onClick={handleReviewerSent}
+            disabled={sendToReviewer.loading}
           >
-            <Send className="h-4 w-4" />
-            Sent
+            {sendToReviewer.loading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Sending...
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4" />
+                Sent
+              </>
+            )}
           </Button>
         </div>
       </MyDialog>
