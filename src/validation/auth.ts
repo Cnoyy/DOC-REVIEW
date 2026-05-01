@@ -24,3 +24,7 @@ export const registerSchema = z.object({
   message: "Passwords do not match",
   path: ["confirmPassword"],
 });
+
+export const reviewerEmailSchema = z.string().email({
+  message: "Please enter a valid email address.",
+});

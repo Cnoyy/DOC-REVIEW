@@ -2,11 +2,11 @@ import { AISuggestionResponse } from '@/types/ai-suggestion';
 
 export const mockAISuggestionData: Record<string, AISuggestionResponse> = {
   'DIPLOMA_CERTIFICATE.pdf': {
-    summary: 'This document appears to be a DIPLOMA CERTIFICATE with standard formatting. The content includes educational credentials and professional achievements.',
+    summary: 'This document is a standard Non-Disclosure Agreement (NDA) between two parties regarding a potential software partnership. It outlines strict confidentiality obligations for a period of three years and specifies that all shared proprietary code remains the sole property of the disclosing party. Key clauses include a non-solicitation agreement and a defined dispute resolution process via arbitration.',
     riskFlags: [
-      'Document contains personal information',
-      'Missing verification elements',
-      'Standard formatting inconsistencies'
+      { message: 'Section 7.3 contains an unlimited liability clause exposing the company to uncapped financial risk.', priority: 'high' },
+      { message: 'Auto-renewal clause (Section 2.4) requires 90-day advance notice — above industry standard of 30–60 days.', priority: 'medium' },
+      { message: 'Governing law set to Delaware — favorable but confirm with legal counsel.', priority: 'low' }
     ],
     recommendations: [
       'Verify document authenticity',
@@ -22,10 +22,11 @@ export const mockAISuggestionData: Record<string, AISuggestionResponse> = {
     ]
   },
   'TRANSCRIPT.pdf': {
-    summary: 'Academic transcript showing course completion and grades. Document contains official university branding.',
+    summary: 'This document is a standard Non-Disclosure Agreement (NDA) between two parties regarding a potential software partnership. It outlines strict confidentiality obligations for a period of three years and specifies that all shared proprietary code remains the sole property of the disclosing party. Key clauses include a non-solicitation agreement and a defined dispute resolution process via arbitration.',
     riskFlags: [
-      'Contains sensitive student information',
-      'Potential grade manipulation'
+      { message: 'Section 7.3 contains an unlimited liability clause exposing the company to uncapped financial risk.', priority: 'high' },
+      { message: 'Auto-renewal clause (Section 2.4) requires 90-day advance notice — above industry standard of 30–60 days.', priority: 'medium' },
+      { message: 'Governing law set to Delaware — favorable but confirm with legal counsel.', priority: 'low' }
     ],
     recommendations: [
       'Verify with university registrar',
@@ -39,10 +40,11 @@ export const mockAISuggestionData: Record<string, AISuggestionResponse> = {
     ]
   },
   'CONTRACT.pdf': {
-    summary: 'Legal contract between parties. Document contains signatures and legal terms.',
+    summary: 'This document is a standard Non-Disclosure Agreement (NDA) between two parties regarding a potential software partnership. It outlines strict confidentiality obligations for a period of three years and specifies that all shared proprietary code remains the sole property of the disclosing party. Key clauses include a non-solicitation agreement and a defined dispute resolution process via arbitration.',
     riskFlags: [
-      'Contains legal binding terms',
-      'Requires careful review'
+      { message: 'Section 7.3 contains an unlimited liability clause exposing the company to uncapped financial risk.', priority: 'high' },
+      { message: 'Auto-renewal clause (Section 2.4) requires 90-day advance notice — above industry standard of 30–60 days.', priority: 'medium' },
+      { message: 'Governing law set to Delaware — favorable but confirm with legal counsel.', priority: 'low' }
     ],
     recommendations: [
       'Legal verification recommended',
@@ -56,10 +58,11 @@ export const mockAISuggestionData: Record<string, AISuggestionResponse> = {
     ]
   },
   'REPORT.pdf': {
-    summary: 'Business report with financial data and analysis. Contains company confidential information.',
+    summary: 'This document is a standard Non-Disclosure Agreement (NDA) between two parties regarding a potential software partnership. It outlines strict confidentiality obligations for a period of three years and specifies that all shared proprietary code remains the sole property of the disclosing party. Key clauses include a non-solicitation agreement and a defined dispute resolution process via arbitration.',
     riskFlags: [
-      'Contains sensitive business data',
-      'Competitive information'
+      { message: 'Section 7.3 contains an unlimited liability clause exposing the company to uncapped financial risk.', priority: 'high' },
+      { message: 'Auto-renewal clause (Section 2.4) requires 90-day advance notice — above industry standard of 30–60 days.', priority: 'medium' },
+      { message: 'Governing law set to Delaware — favorable but confirm with legal counsel.', priority: 'low' }
     ],
     recommendations: [
       'Implement access controls',
@@ -79,10 +82,11 @@ export function getMockAISuggestion(documentName: string): AISuggestionResponse 
   const baseName = documentName.replace(/\.[^/.]+$/, '');
   
   return mockAISuggestionData[documentName as keyof typeof mockAISuggestionData] || {
-    summary: `${baseName} analysis completed successfully.`,
+    summary: 'This document is a standard Non-Disclosure Agreement (NDA) between two parties regarding a potential software partnership. It outlines strict confidentiality obligations for a period of three years and specifies that all shared proprietary code remains the sole property of the disclosing party. Key clauses include a non-solicitation agreement and a defined dispute resolution process via arbitration.',
     riskFlags: [
-      'Document requires verification',
-      'Standard formatting needed'
+      { message: 'Section 7.3 contains an unlimited liability clause exposing the company to uncapped financial risk.', priority: 'high' },
+      { message: 'Auto-renewal clause (Section 2.4) requires 90-day advance notice — above industry standard of 30–60 days.', priority: 'medium' },
+      { message: 'Governing law set to Delaware — favorable but confirm with legal counsel.', priority: 'low' }
     ],
     recommendations: [
       'Verify document authenticity',
