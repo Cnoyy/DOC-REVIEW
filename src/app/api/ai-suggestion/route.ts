@@ -1,16 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-
-// Mock AI suggestion response type
-interface AISuggestionResponse {
-  summary: string;
-  riskFlags: Array<{
-    message: string;
-    priority: 'high' | 'medium' | 'low';
-  }>;
-  recommendations: string[];
-  moreSuggestions: string[];
-}
+import { AISuggestionResponse, AISuggestionRequest } from '@/types/ai-suggestion';
 
 // Mock data for development
 const mockAISuggestion: AISuggestionResponse = {
@@ -37,6 +27,24 @@ const mockAISuggestion: AISuggestionResponse = {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    
+    // Validate request body using AISuggestionRequest type
+    const validationResult = z.object({
+      documentName: z.string().min(1, 'Document name is required'),
+      requestType: z.enum(['ai_suggestion'])
+    }).safeParse(body);
+    
+    if (!validationResult.success) {
+      const errorMessages = validationResult.error.issues.map(err => err.message);
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'Validation failed', 
+          errors: errorMessages 
+        },
+        { status: 400 }
+      );
+    }
     
     // Simulate API processing delay
     await new Promise(resolve => setTimeout(resolve, 1000));
