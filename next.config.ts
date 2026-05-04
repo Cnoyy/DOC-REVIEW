@@ -2,7 +2,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // devIndicators: false,
+  devIndicators: {
+    position: 'bottom-right',
+  },
+  serverExternalPackages: [],
+  reactStrictMode: false,
 };
 
 export default nextConfig;

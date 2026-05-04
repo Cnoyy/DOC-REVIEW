@@ -1,0 +1,103 @@
+import { ReviewDocument, ReviewDocumentsResponse } from '@/types/review-documents';
+
+export const mockReviewDocuments: ReviewDocument[] = [
+  {
+    id: 'rev-001',
+    name: 'Employment_Contract_2024.pdf',
+    submittedBy: 'Shinoy',
+    submittedDate: '2024-11-15',
+    status: 'pending',
+    documentType: 'PDF',
+    fileSize: '1.2 MB',
+    description: 'Employment contract for new software engineer hire. Requires legal review of non-compete and IP clauses.',
+  },
+  {
+    id: 'rev-002',
+    name: 'NDA_Partnership_Agreement.docx',
+    submittedBy: 'Sarah Johnson',
+    submittedDate: '2024-11-20',
+    status: 'pending',
+    documentType: 'DOCX',
+    fileSize: '845 KB',
+    description: 'Non-disclosure agreement for the upcoming TechCorp partnership. Urgent review requested.',
+  },
+  {
+    id: 'rev-003',
+    name: 'Vendor_Agreement_CloudServices.pdf',
+    submittedBy: 'Michael Chen',
+    submittedDate: '2024-11-25',
+    status: 'pending',
+    documentType: 'PDF',
+    fileSize: '2.1 MB',
+    description: 'Cloud infrastructure vendor agreement. Key SLA and GDPR compliance sections need attention.',
+  },
+  {
+    id: 'rev-004',
+    name: 'Q3_Financial_Report.pdf',
+    submittedBy: 'Emily Davis',
+    submittedDate: '2024-10-30',
+    status: 'approved',
+    documentType: 'PDF',
+    fileSize: '3.4 MB',
+    description: 'Q3 financial summary report approved after reconciliation of revenue recognition methodology.',
+  },
+  {
+    id: 'rev-005',
+    name: 'Compliance_Policy_2024.txt',
+    submittedBy: 'Robert Wilson',
+    submittedDate: '2024-11-01',
+    status: 'approved',
+    documentType: 'TXT',
+    fileSize: '128 KB',
+    description: 'Updated compliance policy covering GDPR and SOC 2 Type II requirements. Approved with minor notes.',
+  },
+  {
+    id: 'rev-006',
+    name: 'IP_Assignment_Agreement.docx',
+    submittedBy: 'David Thompson',
+    submittedDate: '2024-11-10',
+    status: 'rejected',
+    documentType: 'DOCX',
+    fileSize: '678 KB',
+    description: 'IP assignment agreement rejected due to missing moral rights waiver and inadequate consideration clause.',
+  },
+  {
+    id: 'rev-007',
+    name: 'Project_Proposal_v2.docx',
+    submittedBy: 'Lisa Martinez',
+    submittedDate: '2024-11-28',
+    status: 'rejected',
+    documentType: 'DOCX',
+    fileSize: '512 KB',
+    description: 'Project proposal rejected — missing contingency budget and milestone buffers. Revision requested.',
+  },
+  {
+    id: 'rev-008',
+    name: 'Service_Level_Agreement_v3.pdf',
+    submittedBy: 'James Anderson',
+    submittedDate: '2024-11-05',
+    status: 'sent',
+    documentType: 'PDF',
+    fileSize: '1.8 MB',
+    description: 'SLA for managed IT services. Review feedback sent back to submitter with suggested amendments.',
+  },
+  {
+    id: 'rev-009',
+    name: 'Data_Processing_Agreement.pdf',
+    submittedBy: 'Priya Nair',
+    submittedDate: '2024-11-12',
+    status: 'sent',
+    documentType: 'PDF',
+    fileSize: '950 KB',
+    description: 'GDPR data processing agreement. Detailed review notes sent with sub-processor disclosure requirements.',
+  },
+];
+
+export async function getReviewDocumentsMock(): Promise<ReviewDocumentsResponse> {
+  await new Promise(resolve => setTimeout(resolve, 700));
+  return {
+    success: true,
+    data: mockReviewDocuments,
+    total: mockReviewDocuments.length,
+  };
+}

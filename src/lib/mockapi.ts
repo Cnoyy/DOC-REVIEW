@@ -5,7 +5,14 @@ export const API_CONFIG = {
   ENDPOINTS: {
     AI_SUGGESTION: '/ai-suggestion',
     SEND_TO_REVIEWER: '/send-to-reviewer',
-    // Add other endpoints as needed
+    DOCUMENTS_LIBRARY: '/documents-library',
+    DOCUMENT_DETAIL: '/document-detail',
+    REVIEW_DOCUMENTS: '/Review-documents',
+    REVIEWDOC_DETAIL: '/reviewdoc-detail',
+    SENT_SUGGESTION: '/sent-suggestion',
+    ACCEPT_BY_REVIEWER: '/accept-byreviewer',
+    REJECT_BY_REVIEWER: '/reject-by-reviewer',
+    SEARCH_HISTORY: '/search-history',
   }
 } as const;
 
