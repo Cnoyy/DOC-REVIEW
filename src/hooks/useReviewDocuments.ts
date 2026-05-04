@@ -6,9 +6,10 @@ import { useReviewDocumentsStore } from '@/store/review-documents-store';
 export function useReviewDocuments() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { documents, setDocuments } = useReviewDocumentsStore();
+  const { documents, setDocuments, clearDocuments } = useReviewDocumentsStore();
 
   const fetchDocuments = useCallback(async () => {
+    // Use cached data if already loaded
     if (documents.length > 0) return;
 
     setLoading(true);
@@ -28,7 +29,26 @@ export function useReviewDocuments() {
     }
   }, [documents.length, setDocuments]);
 
-  return { documents, loading, error, fetchDocuments };
+  const refreshDocuments = useCallback(async () => {
+    clearDocuments();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await ReviewDocumentsService.getDocuments();
+      if (result.success) {
+        setDocuments(result.data);
+      } else {
+        setError(result.message || 'Failed to load review documents');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load review documents');
+    } finally {
+      setLoading(false);
+    }
+  }, [clearDocuments, setDocuments]);
+
+  return { documents, loading, error, fetchDocuments, refreshDocuments };
 }
 
 export function useReviewDocDetail() {

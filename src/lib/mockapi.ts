@@ -1,6 +1,7 @@
 // Centralized API configuration
 export const API_CONFIG = {
-  BASE_URL: 'http://localhost:3000/api',
+  // Use relative URL for production, localhost for development
+  BASE_URL: process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:3000/api',
   
   ENDPOINTS: {
     AI_SUGGESTION: '/ai-suggestion',

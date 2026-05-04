@@ -32,9 +32,28 @@ export function useDocumentsLibrary() {
   }, [documents.length, setDocuments]);
 
   const deleteDocument = useCallback(
-    (documentId: string) => {
-      const updated = documents.filter((d: DocumentLibraryItem) => d.id !== documentId);
-      setDocuments(updated);
+    async (documentId: string) => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const result = await DocumentsLibraryService.deleteDocument(documentId);
+        
+        if (result.success) {
+          const updated = documents.filter((d: DocumentLibraryItem) => d.id !== documentId);
+          setDocuments(updated);
+          return { success: true, message: result.message };
+        } else {
+          setError(result.message || 'Failed to delete document');
+          return { success: false, message: result.message || 'Failed to delete document' };
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to delete document';
+        setError(message);
+        return { success: false, message };
+      } finally {
+        setLoading(false);
+      }
     },
     [documents, setDocuments]
   );

@@ -99,15 +99,15 @@ export default function SearchPage() {
               <button
                 key={item.id}
                 onClick={() => handleHistoryClick(item)}
-                className="w-full text-left bg-white rounded-xl border border-slate-200 shadow-sm p-5 hover:border-indigo-300 hover:shadow-md transition-all duration-150 group"
+                className="w-full text-left bg-white rounded-xl border border-slate-200 shadow-sm p-5 hover:bg-slate-200 hover:shadow-md transition-all duration-150 group cursor-pointer"
               >
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 shrink-0">
-                    <FileText className="h-5 w-5 text-indigo-500" />
+                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-50 border border-slate-100 shrink-0">
+                    <FileText className="h-5 w-5 text-slate-500" />
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 truncate group-hover:text-indigo-700 transition-colors">
+                    <p className="text-sm font-semibold text-slate-800 truncate group-hover:text-slate-700 transition-colors">
                       {item.documentName}
                     </p>
                     <div className="flex items-center gap-3 mt-1">
@@ -126,7 +126,7 @@ export default function SearchPage() {
                     </div>
                   </div>
 
-                  <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-indigo-400 transition-colors shrink-0" />
+                  <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors shrink-0" />
                 </div>
               </button>
             ))}

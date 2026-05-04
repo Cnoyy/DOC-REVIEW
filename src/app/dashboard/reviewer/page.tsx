@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   FileText,
@@ -9,14 +9,15 @@ import {
   XCircle,
   Send,
   User,
-  Calendar,
   ChevronRight,
+  Calendar,
 } from "lucide-react";
 import { layout as l } from "@/lib/theme";
 import { useReviewDocuments } from "@/hooks/useReviewDocuments";
 import { ReviewDocument, ReviewStatus } from "@/types/review-documents";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import SearchAndDateFilter from "@/components/dashboard/SearchAndDateFilter";
 
 const TABS: { key: ReviewStatus; label: string; icon: React.ReactNode }[] = [
   { key: "pending", label: "Pending", icon: <Clock className="h-4 w-4" /> },
@@ -45,6 +46,13 @@ function ReviewerPageInner() {
 
   const { documents, loading, error, fetchDocuments } = useReviewDocuments();
 
+  const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [dateRange, setDateRange] = useState<{ from: string | null; to: string | null }>({
+    from: null,
+    to: null,
+  });
+
   useEffect(() => {
     fetchDocuments();
   }, [fetchDocuments]);
@@ -59,10 +67,39 @@ function ReviewerPageInner() {
     [documents]
   );
 
-  const filtered = useMemo(
-    () => documents.filter((d) => d.status === activeTab),
-    [documents, activeTab]
-  );
+  const filtered = useMemo(() => {
+    let result = documents.filter((d) => d.status === activeTab);
+
+    // Search filter
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter((d) => d.name.toLowerCase().includes(q));
+    }
+
+    // Date range filter
+    if (dateRange.from) {
+      const fromDate = new Date(dateRange.from);
+      result = result.filter((d) => new Date(d.submittedDate) >= fromDate);
+    }
+    if (dateRange.to) {
+      const toDate = new Date(dateRange.to);
+      toDate.setHours(23, 59, 59, 999); // End of day
+      result = result.filter((d) => new Date(d.submittedDate) <= toDate);
+    }
+
+    // Sort by date
+    result.sort((a, b) => {
+      const da = new Date(a.submittedDate).getTime();
+      const db = new Date(b.submittedDate).getTime();
+      return sortOrder === "desc" ? db - da : da - db;
+    });
+
+    return result;
+  }, [documents, activeTab, search, dateRange, sortOrder]);
+
+  const handleDateRangeChange = useCallback((range: { from: string | null; to: string | null }) => {
+    setDateRange(range);
+  }, []);
 
   const setTab = (tab: ReviewStatus) => {
     router.push(`/dashboard/reviewer?tab=${tab}`);
@@ -71,8 +108,17 @@ function ReviewerPageInner() {
   return (
     <div className={l.page}>
      
+      <SearchAndDateFilter
+        search={search}
+        onSearchChange={setSearch}
+        sortOrder={sortOrder}
+        onSortOrderChange={setSortOrder}
+        dateRange={dateRange}
+        onDateRangeChange={handleDateRangeChange}
+        placeholder="Search review documents..."
+      />
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm mb-6 overflow-hidden">
+      <div className=" mb-6 overflow-hidden">
         <div className="flex border-b border-slate-200 overflow-x-auto">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.key;
@@ -82,8 +128,8 @@ function ReviewerPageInner() {
                 onClick={() => setTab(tab.key)}
                 className={`flex items-center gap-2 px-5 py-4 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
                   isActive
-                    ? "border-slate-800 text-slate-900 bg-slate-50"
-                    : "border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                    ? "border-slate-800 rounded-t-lg text-slate-900 bg-slate-50"
+                    : "border-transparent text-slate-500  hover:rounded-t-lg hover:text-slate-700 hover:bg-slate-50"
                 }`}
               >
                 <span className={isActive ? "text-slate-800" : "text-slate-400"}>
@@ -94,7 +140,7 @@ function ReviewerPageInner() {
                   className={`inline-flex items-center justify-center min-w-[22px] h-5 px-1.5 rounded-full text-xs font-semibold ${
                     isActive
                       ? "bg-slate-800 text-white"
-                      : "bg-slate-100 text-slate-500"
+                      : "bg-slate-200 text-slate-700"
                   }`}
                 >
                   {counts[tab.key]}
@@ -200,7 +246,7 @@ function DocumentCard({
         <div className="flex-shrink-0">
           <button
             onClick={onOpen}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 transition-colors cursor-pointer"
           >
             Open for Review
             <ChevronRight className="h-4 w-4" />
