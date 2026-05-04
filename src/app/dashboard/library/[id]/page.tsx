@@ -23,7 +23,8 @@ import {
 import { layout as l } from "@/lib/theme";
 import { Button } from "@/components/ui/button";
 import { MyDialog } from "@/components/ui/mydialog";
-import { useDocumentDetail } from "@/hooks/useDocumentDetail";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useDocumentDetailQuery } from "@/hooks/useDocumentDetailQuery";
 import { useSendToReviewer } from "@/hooks/useSendToReviewer";
 import { DocumentDetail } from "@/types/documents-library";
 import { showSuccessToast } from "@/components/toasts/SuccessToast";
@@ -497,19 +498,14 @@ export default function DocumentDetailPage() {
   const router = useRouter();
   const documentId = params.id as string;
 
-  const { detail, loading, error, fetchDocumentDetail } = useDocumentDetail();
+  const { detail, loading, error } = useDocumentDetailQuery(documentId);
   const sendToReviewer = useSendToReviewer();
 
   const [showReviewerDialog, setShowReviewerDialog] = useState(false);
   const [reviewerEmails, setReviewerEmails] = useState<string[]>([""]);
   const [emailErrors, setEmailErrors] = useState<string[]>([""]);
 
-  useEffect(() => {
-    if (documentId) {
-      fetchDocumentDetail(documentId);
-    }
-  }, [documentId, fetchDocumentDetail]);
-
+  
   const handleAddReviewerEmail = useCallback(() => {
     setReviewerEmails((prev) => [...prev, ""]);
     setEmailErrors((prev) => [...prev, ""]);
@@ -578,9 +574,74 @@ export default function DocumentDetailPage() {
   if (loading) {
     return (
       <div className={l.page}>
-        <div className="flex flex-col items-center justify-center py-32 gap-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
-          <p className="text-sm text-slate-500">Loading document details...</p>
+        <div className="space-y-6">
+          {/* Header skeleton */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            <div className="flex items-start gap-4">
+              <Skeleton className="h-12 w-12 rounded-xl" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-6 w-3/4" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-5 mt-5 pt-5 border-t border-slate-100">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+            </div>
+          </div>
+
+          {/* Content skeleton */}
+          <div className="flex gap-6">
+            <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-2 px-5 py-3.5 border-b border-slate-100">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-3 w-16 ml-auto" />
+              </div>
+              <div className="p-5 space-y-3">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-4/5" />
+                <Skeleton className="h-4 w-11/12" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-9/10" />
+                <Skeleton className="h-4 w-2/3" />
+              </div>
+            </div>
+
+            {/* Side panel skeleton */}
+            <div className="w-80 flex-shrink-0 bg-white rounded-2xl border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-2 px-5 py-3.5 border-b border-slate-100">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+              <div className="p-4 space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                </div>
+                <Skeleton className="h-16 w-full rounded-xl" />
+                <Skeleton className="h-16 w-full rounded-xl" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );

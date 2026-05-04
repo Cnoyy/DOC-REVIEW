@@ -14,6 +14,9 @@ export const API_CONFIG = {
     ACCEPT_BY_REVIEWER: '/accept-byreviewer',
     REJECT_BY_REVIEWER: '/reject-by-reviewer',
     SEARCH_HISTORY: '/search-history',
+    USER_PROFILE: '/user-profile',
+    CHANGE_PASSWORD: '/change-password',
+    UPDATE_PROFILE: '/update-profile',
   }
 } as const;
 

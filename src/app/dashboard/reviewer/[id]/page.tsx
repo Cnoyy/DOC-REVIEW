@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { layout as l } from "@/lib/theme";
 import { Button } from "@/components/ui/button";
-import { useReviewDocDetail } from "@/hooks/useReviewDocuments";
+import { useReviewDocDetailQuery } from "@/hooks/useReviewDocumentsQuery";
 import { useReviewActions } from "@/hooks/useReviewActions";
 import { useAISuggestions } from "@/hooks/useAisuggestions";
 import { showSuccessToast } from "@/components/toasts/SuccessToast";
@@ -30,6 +30,7 @@ import { showErrorToast } from "@/components/toasts/ErrorToast";
 import { showValidationToast } from "@/components/toasts/ValidationToast";
 import { formatAISuggestionAsReviewNote } from "@/mock/data/ai-suggestion";
 import { ReviewStatus } from "@/types/review-documents";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const STATUS_CONFIG: Record<ReviewStatus, { label: string; className: string }> = {
   pending: { label: "Pending Review", className: "bg-amber-50 text-amber-700 border border-amber-200" },
@@ -60,7 +61,7 @@ export default function ReviewerDetailPage() {
   const router = useRouter();
   const documentId = params.id as string;
 
-  const { detail, loading, error, fetchDetail } = useReviewDocDetail();
+  const { detail, loading, error } = useReviewDocDetailQuery(documentId);
   const reviewActions = useReviewActions();
   const aiSuggestions = useAISuggestions();
 
@@ -71,10 +72,7 @@ export default function ReviewerDetailPage() {
   const [loadingReject, setLoadingReject] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
-    if (documentId) fetchDetail(documentId);
-  }, [documentId, fetchDetail]);
-
+  
   useEffect(() => {
     if (detail?.contents) {
       const all: Record<number, boolean> = {};
@@ -152,9 +150,68 @@ export default function ReviewerDetailPage() {
   if (loading) {
     return (
       <div className={l.page}>
-        <div className="flex flex-col items-center justify-center py-32 gap-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
-          <p className="text-sm text-slate-500">Loading document...</p>
+        <div className="space-y-6">
+          {/* Header skeleton */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            <div className="flex items-start gap-4">
+              <Skeleton className="h-12 w-12 rounded-xl" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-6 w-3/4" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-5 mt-5 pt-5 border-t border-slate-100">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+            </div>
+          </div>
+
+          {/* Content skeleton */}
+          <div className="flex gap-6">
+            <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-2 px-5 py-3.5 border-b border-slate-100">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-3 w-16 ml-auto" />
+              </div>
+              <div className="p-5 space-y-3">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-4/5" />
+                <Skeleton className="h-4 w-11/12" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+            </div>
+
+            {/* Side panel skeleton */}
+            <div className="w-80 flex-shrink-0 space-y-4">
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+                <Skeleton className="h-5 w-32 mb-3" />
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+                <Skeleton className="h-5 w-24 mb-3" />
+                <Skeleton className="h-20 w-full" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -243,7 +300,7 @@ export default function ReviewerDetailPage() {
                 className="flex items-center justify-center gap-2 cursor-pointer bg-emerald-600 text-white hover:bg-emerald-700 border border-emerald-600 rounded-xl px-4 py-2.5 text-sm font-medium"
               >
                 {loadingApprove ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                 ) : (
                   <>
                     <CheckCircle className="h-4 w-4" />
@@ -257,7 +314,7 @@ export default function ReviewerDetailPage() {
                 className="flex items-center justify-center gap-2 cursor-pointer bg-red-600 text-white hover:bg-red-700 border border-red-600 rounded-xl px-4 py-2.5 text-sm font-medium"
               >
                 {loadingReject ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                 ) : (
                   <>
                     <XCircle className="h-4 w-4" />
@@ -343,7 +400,7 @@ export default function ReviewerDetailPage() {
               >
                 {aiSuggestions.loading ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent"></div>
                     Generating AI Suggestion...
                   </>
                 ) : (
@@ -362,7 +419,7 @@ export default function ReviewerDetailPage() {
               >
                 {loadingSend ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent"></div>
                     Sending...
                   </>
                 ) : (

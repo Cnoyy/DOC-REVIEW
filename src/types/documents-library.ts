@@ -58,3 +58,7 @@ export interface DocumentDetailResponse {
   data: DocumentDetail;
   message?: string;
 }
+
+// TanStack Query keys
+export const DOCUMENTS_LIBRARY_KEY = ["documents-library"] as const;
+export const DOCUMENT_DETAIL_KEY = (id: string) => ["document-detail", id] as const;

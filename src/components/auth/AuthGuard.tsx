@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { NotFound } from "@/components/ui/404";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -45,9 +46,14 @@ export function AuthGuard({ children }: AuthGuardProps) {
   if (isAuthenticated === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading...</p>
+        <div className="w-full max-w-md space-y-4">
+          <Skeleton className="h-8 w-8 rounded-full mx-auto" />
+          <Skeleton className="h-4 w-32 mx-auto" />
+          <div className="space-y-2">
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-5/6" />
+            <Skeleton className="h-3 w-4/5" />
+          </div>
         </div>
       </div>
     );

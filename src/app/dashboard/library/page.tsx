@@ -17,12 +17,13 @@ import {
   UserCheck,
 } from "lucide-react";
 import { layout as l } from "@/lib/theme";
-import { useDocumentsLibrary } from "@/hooks/useDocumentsLibrary";
+import { useDocumentsLibraryQuery, useDeleteDocumentMutation } from "@/hooks/useDocumentsLibraryQuery";
 import { DocumentLibraryItem, ReviewerStatus } from "@/types/documents-library";
 import { Button } from "@/components/ui/button";
 import SearchAndDateFilter from "@/components/dashboard/SearchAndDateFilter";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { showSuccessToast } from "@/components/toasts/SuccessToast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const PAGE_SIZE = 5;
 
@@ -62,8 +63,8 @@ const TYPE_COLORS: Record<string, string> = {
 
 export default function LibraryPage() {
   const router = useRouter();
-  const { documents, loading, error, fetchDocuments, deleteDocument } =
-    useDocumentsLibrary();
+  const { documents, loading, error } = useDocumentsLibraryQuery();
+  const deleteMutation = useDeleteDocumentMutation();
 
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
@@ -82,10 +83,7 @@ export default function LibraryPage() {
     document: null,
   });
 
-  useEffect(() => {
-    fetchDocuments();
-  }, [fetchDocuments]);
-
+  
   useEffect(() => {
     setCurrentPage(1);
   }, [search, activeFilter, sortOrder, dateRange]);
@@ -154,13 +152,14 @@ export default function LibraryPage() {
   const handleConfirmDelete = useCallback(async () => {
     if (!deleteDialog.document) return;
 
-    const result = await deleteDocument(deleteDialog.document.id);
-    
-    if (result.success) {
-      showSuccessToast(result.message || 'Document deleted successfully');
+    try {
+      await deleteMutation.mutateAsync(deleteDialog.document.id);
+      showSuccessToast('Document deleted successfully');
       setDeleteDialog({ isOpen: false, document: null });
+    } catch (error) {
+      console.error('Delete failed:', error);
     }
-  }, [deleteDialog.document, deleteDocument]);
+  }, [deleteDialog.document, deleteMutation]);
 
   const handleCancelDelete = useCallback(() => {
     setDeleteDialog({ isOpen: false, document: null });
@@ -184,10 +183,10 @@ export default function LibraryPage() {
   }, []);
 
   const filters: { key: FilterType; label: string; icon: React.ReactNode }[] = [
-    { key: "all", label: "All Documents", icon: <FileText className="h-3.5 w-3.5" /> },
-    { key: "ai-suggested", label: "AI Suggested", icon: <Bot className="h-3.5 w-3.5" /> },
-    { key: "reviewer-suggestion", label: "Reviewer Suggestion", icon: <UserCheck className="h-3.5 w-3.5" /> },
-    { key: "pending", label: "Reviewer Pending", icon: <Clock className="h-3.5 w-3.5" /> },
+    { key: "all", label: "All", icon: <FileText className="h-3.5 w-3.5" /> },
+    { key: "ai-suggested", label: "AI", icon: <Bot className="h-3.5 w-3.5" /> },
+    { key: "reviewer-suggestion", label: "Suggestions", icon: <UserCheck className="h-3.5 w-3.5" /> },
+    { key: "pending", label: "Pending", icon: <Clock className="h-3.5 w-3.5" /> },
     { key: "approved", label: "Approved", icon: <CheckCircle className="h-3.5 w-3.5" /> },
     { key: "rejected", label: "Rejected", icon: <XCircle className="h-3.5 w-3.5" /> },
   ];
@@ -245,9 +244,28 @@ export default function LibraryPage() {
 
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
-            <p className="text-sm text-slate-500">Loading documents...</p>
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="bg-white rounded-xl border border-slate-200 p-4">
+                <div className="flex items-start gap-4">
+                  <Skeleton className="h-12 w-12 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                    <div className="flex gap-2 mt-2">
+                      <Skeleton className="h-5 w-16 rounded-full" />
+                      <Skeleton className="h-5 w-20 rounded-full" />
+                      <Skeleton className="h-5 w-24 rounded-full" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Skeleton className="h-8 w-8" />
+                    <Skeleton className="h-8 w-8" />
+                    <Skeleton className="h-8 w-8" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : error ? (
           <div className="flex items-center justify-center py-20">
