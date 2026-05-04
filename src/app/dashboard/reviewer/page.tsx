@@ -13,11 +13,12 @@ import {
   Calendar,
 } from "lucide-react";
 import { layout as l } from "@/lib/theme";
-import { useReviewDocuments } from "@/hooks/useReviewDocuments";
+import { useReviewDocumentsQuery } from "@/hooks/useReviewDocumentsQuery";
 import { ReviewDocument, ReviewStatus } from "@/types/review-documents";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import SearchAndDateFilter from "@/components/dashboard/SearchAndDateFilter";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const TABS: { key: ReviewStatus; label: string; icon: React.ReactNode }[] = [
   { key: "pending", label: "Pending", icon: <Clock className="h-4 w-4" /> },
@@ -44,7 +45,7 @@ function ReviewerPageInner() {
   const searchParams = useSearchParams();
   const activeTab = (searchParams.get("tab") as ReviewStatus) || "pending";
 
-  const { documents, loading, error, fetchDocuments } = useReviewDocuments();
+  const { documents, loading, error } = useReviewDocumentsQuery();
 
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -53,10 +54,7 @@ function ReviewerPageInner() {
     to: null,
   });
 
-  useEffect(() => {
-    fetchDocuments();
-  }, [fetchDocuments]);
-
+  
   const counts = useMemo(
     () => ({
       pending: documents.filter((d) => d.status === "pending").length,
@@ -152,9 +150,23 @@ function ReviewerPageInner() {
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-24 gap-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
-          <p className="text-sm text-slate-500">Loading documents...</p>
+        <div className="space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="bg-white rounded-xl border border-slate-200 p-4">
+              <div className="flex items-start gap-4">
+                <Skeleton className="h-12 w-12 rounded-lg" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                  <div className="flex gap-2 mt-2">
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                  </div>
+                </div>
+                <Skeleton className="h-8 w-20" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : error ? (
         <div className="flex items-center justify-center py-24">
@@ -261,8 +273,18 @@ export default function ReviewerPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="bg-white rounded-xl border border-slate-200 p-4">
+              <div className="flex items-start gap-4">
+                <Skeleton className="h-12 w-12 rounded-lg" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       }
     >

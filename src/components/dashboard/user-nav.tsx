@@ -30,6 +30,11 @@ export function UserNav({ isCollapsed = false }: UserNavProps) {
   }
  };
 
+ const handleAccountClick = () => {
+  router.push("/dashboard/account");
+  setIsOpen(false);
+ };
+
  useEffect(() => {
  function handleClickOutside(e: MouseEvent) {
  if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -49,11 +54,11 @@ export function UserNav({ isCollapsed = false }: UserNavProps) {
  {/* Dropdown card — floats above trigger, no layout shift */}
  {isOpen && (
  <div className={s.userNavDropdown}>
- <button className={s.userNavDropdownItem}>
+ <button className={cn(s.userNavDropdownItem, "cursor-pointer")} onClick={handleAccountClick}>
  <User className="h-4 w-4 shrink-0" />
  <span>Account</span>
  </button>
- <button className={s.userNavDropdownItem} onClick={handleLogout}>
+ <button className={cn(s.userNavDropdownItem, "cursor-pointer")} onClick={handleLogout}>
  <LogOut className="h-4 w-4 shrink-0" />
  <span>Log out</span>
  </button>

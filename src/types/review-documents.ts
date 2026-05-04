@@ -48,6 +48,10 @@ export interface ReviewDocDetailResponse {
   message?: string;
 }
 
+// TanStack Query keys
+export const REVIEW_DOCUMENTS_KEY = ["review-documents"] as const;
+export const REVIEWDOC_DETAIL_KEY = (id: string) => ["reviewdoc-detail", id] as const;
+
 export interface ReviewActionRequest {
   documentId: string;
   reviewerNotes?: string;

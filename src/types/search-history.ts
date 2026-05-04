@@ -15,3 +15,6 @@ export interface SearchHistoryResponse {
   total: number;
   message?: string;
 }
+
+// TanStack Query keys
+export const SEARCH_HISTORY_KEY = ["search-history"] as const;
