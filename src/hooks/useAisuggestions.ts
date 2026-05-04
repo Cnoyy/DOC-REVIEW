@@ -32,11 +32,17 @@ export function useAISuggestions() {
     setError(null);
   }, []);
 
+  const preloadSuggestions = useCallback((data: AISuggestionResponse) => {
+    setSuggestions(data);
+    setError(null);
+  }, []);
+
   return {
     suggestions,
     loading,
     error,
     fetchAISuggestions,
-    clearSuggestions
+    clearSuggestions,
+    preloadSuggestions,
   };
 }

@@ -77,6 +77,40 @@ export const mockAISuggestionData: Record<string, AISuggestionResponse> = {
   }
 };
 
+export function formatAISuggestionAsReviewNote(suggestion: AISuggestionResponse): string {
+  const lines: string[] = [];
+
+  lines.push('=== AI-Generated Review Notes ===\n');
+  lines.push(`SUMMARY\n${suggestion.summary}\n`);
+
+  if (suggestion.riskFlags.length > 0) {
+    lines.push('RISK FLAGS');
+    suggestion.riskFlags.forEach((flag, i) => {
+      lines.push(`${i + 1}. [${flag.priority.toUpperCase()}] ${flag.message}`);
+    });
+    lines.push('');
+  }
+
+  if (suggestion.recommendations.length > 0) {
+    lines.push('RECOMMENDATIONS');
+    suggestion.recommendations.forEach((rec, i) => {
+      lines.push(`${i + 1}. ${rec}`);
+    });
+    lines.push('');
+  }
+
+  if (suggestion.moreSuggestions.length > 0) {
+    lines.push('ADDITIONAL SUGGESTIONS');
+    suggestion.moreSuggestions.forEach((s, i) => {
+      lines.push(`${i + 1}. ${s}`);
+    });
+    lines.push('');
+  }
+
+  lines.push('--- Add your manual review notes below ---\n');
+  return lines.join('\n');
+}
+
 export function getMockAISuggestion(documentName: string): AISuggestionResponse {
   // Extract base name without extension for fallback
   const baseName = documentName.replace(/\.[^/.]+$/, '');

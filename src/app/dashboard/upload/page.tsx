@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { UploadCloud, FileText, X, CheckCircle, ArrowRight, Bot, Send, RotateCcw, Plus, ThumbsUp, ThumbsDown, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MyDialog } from "@/components/ui/mydialog";
@@ -14,6 +14,7 @@ import { showErrorToast } from "@/components/toasts/ErrorToast";
 import { showValidationToast } from "@/components/toasts/ValidationToast";
 import { reviewerEmailSchema } from "@/validation/auth";
 import { documentFileSchema } from "@/validation/document";
+import { useUploadPreloadStore } from "@/store/upload-preload-store";
 
 interface UploadedFile {
   id: string;
@@ -36,6 +37,17 @@ export default function UploadPage() {
   const { user } = useAuthStore();
   const aiSuggestions = useAISuggestions();
   const sendToReviewer = useSendToReviewer();
+  const { preloadedFile, preloadedSuggestions, clearPreload } = useUploadPreloadStore();
+
+  useEffect(() => {
+    if (preloadedFile && preloadedSuggestions) {
+      setUploadedFiles([preloadedFile]);
+      setIsAISuggestionMode(true);
+      aiSuggestions.preloadSuggestions(preloadedSuggestions);
+      clearPreload();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
