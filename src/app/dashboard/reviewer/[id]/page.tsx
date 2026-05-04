@@ -217,9 +217,26 @@ export default function ReviewerDetailPage() {
             </div>
           </div>
 
-          {/* Approve / Reject buttons — only for pending, shown in header */}
+                  </div>
+
+        {/* Meta */}
+        <div className="flex flex-wrap gap-5 mt-4 pt-4 border-t border-slate-100 text-sm text-slate-500">
+          <span className="flex items-center gap-2">
+            <User className="h-4 w-4 text-slate-400" />
+            Submitted by <span className="font-medium text-slate-700 ml-1">{detail.submittedBy}</span>
+          </span>
+          <span className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-slate-400" />
+            {new Date(detail.submittedDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+          </span>
+          <span className="flex items-center gap-2">
+            <HardDrive className="h-4 w-4 text-slate-400" />
+            {detail.fileSize}
+          </span>
+          
+          {/* Approve / Reject buttons — only for pending, shown in meta section */}
           {isPending && (
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-2 ml-auto">
               <Button
                 onClick={handleApprove}
                 disabled={loadingApprove || loadingReject || loadingSend}
@@ -250,22 +267,6 @@ export default function ReviewerDetailPage() {
               </Button>
             </div>
           )}
-        </div>
-
-        {/* Meta */}
-        <div className="flex flex-wrap gap-5 mt-4 pt-4 border-t border-slate-100 text-sm text-slate-500">
-          <span className="flex items-center gap-2">
-            <User className="h-4 w-4 text-slate-400" />
-            Submitted by <span className="font-medium text-slate-700 ml-1">{detail.submittedBy}</span>
-          </span>
-          <span className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-slate-400" />
-            {new Date(detail.submittedDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
-          </span>
-          <span className="flex items-center gap-2">
-            <HardDrive className="h-4 w-4 text-slate-400" />
-            {detail.fileSize}
-          </span>
         </div>
       </div>
 
@@ -338,7 +339,7 @@ export default function ReviewerDetailPage() {
               <Button
                 onClick={handleGenerateAI}
                 disabled={aiSuggestions.loading}
-                className="w-full mb-2 flex items-center justify-center gap-2 cursor-pointer bg-indigo-600 text-white hover:bg-indigo-700 border border-indigo-600 rounded-xl py-2.5"
+                className="w-full mb-2 flex items-center justify-center gap-2 cursor-pointer bg-slate-400 text-slate-700 hover:bg-slate-600 hover:text-white border border-slate-400 rounded-xl py-2.5"
               >
                 {aiSuggestions.loading ? (
                   <>

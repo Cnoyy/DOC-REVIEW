@@ -3,7 +3,6 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Search,
   Eye,
   Trash2,
   Download,
@@ -14,13 +13,16 @@ import {
   CheckCircle,
   XCircle,
   Filter,
-  Calendar,
   FileText,
   UserCheck,
 } from "lucide-react";
 import { layout as l } from "@/lib/theme";
 import { useDocumentsLibrary } from "@/hooks/useDocumentsLibrary";
 import { DocumentLibraryItem, ReviewerStatus } from "@/types/documents-library";
+import { Button } from "@/components/ui/button";
+import SearchAndDateFilter from "@/components/dashboard/SearchAndDateFilter";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { showSuccessToast } from "@/components/toasts/SuccessToast";
 
 const PAGE_SIZE = 5;
 
@@ -67,6 +69,18 @@ export default function LibraryPage() {
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
+  const [dateRange, setDateRange] = useState<{ from: string | null; to: string | null }>({
+    from: null,
+    to: null,
+  });
+  
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean;
+    document: DocumentLibraryItem | null;
+  }>({
+    isOpen: false,
+    document: null,
+  });
 
   useEffect(() => {
     fetchDocuments();
@@ -74,7 +88,7 @@ export default function LibraryPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, activeFilter, sortOrder]);
+  }, [search, activeFilter, sortOrder, dateRange]);
 
   const filtered = useMemo(() => {
     let result = [...documents];
@@ -88,12 +102,18 @@ export default function LibraryPage() {
       result = result.filter((d) => d.aiSuggested);
     } else if (activeFilter === "reviewer-suggestion") {
       result = result.filter((d) => d.reviewerStatus === "reviewer-suggestion");
-    } else if (activeFilter === "pending") {
-      result = result.filter((d) => d.reviewerStatus === "pending" && !d.aiSuggested);
-    } else if (activeFilter === "approved") {
-      result = result.filter((d) => d.reviewerStatus === "approved" && !d.aiSuggested);
-    } else if (activeFilter === "rejected") {
-      result = result.filter((d) => d.reviewerStatus === "rejected" && !d.aiSuggested);
+    } else if (activeFilter !== "all") {
+      result = result.filter((d) => d.reviewerStatus === activeFilter);
+    }
+
+    if (dateRange.from) {
+      const fromDate = new Date(dateRange.from);
+      result = result.filter((d) => new Date(d.uploadedDate) >= fromDate);
+    }
+    if (dateRange.to) {
+      const toDate = new Date(dateRange.to);
+      toDate.setHours(23, 59, 59, 999); // End of day
+      result = result.filter((d) => new Date(d.uploadedDate) <= toDate);
     }
 
     result.sort((a, b) => {
@@ -103,7 +123,7 @@ export default function LibraryPage() {
     });
 
     return result;
-  }, [documents, search, activeFilter, sortOrder]);
+  }, [documents, search, activeFilter, sortOrder, dateRange]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice(
@@ -123,12 +143,28 @@ export default function LibraryPage() {
 
   const handleDelete = useCallback(
     (doc: DocumentLibraryItem) => {
-      if (confirm(`Delete "${doc.name}"? This cannot be undone.`)) {
-        deleteDocument(doc.id);
-      }
+      setDeleteDialog({
+        isOpen: true,
+        document: doc,
+      });
     },
-    [deleteDocument]
+    []
   );
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deleteDialog.document) return;
+
+    const result = await deleteDocument(deleteDialog.document.id);
+    
+    if (result.success) {
+      showSuccessToast(result.message || 'Document deleted successfully');
+      setDeleteDialog({ isOpen: false, document: null });
+    }
+  }, [deleteDialog.document, deleteDocument]);
+
+  const handleCancelDelete = useCallback(() => {
+    setDeleteDialog({ isOpen: false, document: null });
+  }, []);
 
   const handleDownload = useCallback((doc: DocumentLibraryItem) => {
     const content = `Document: ${doc.name}\nType: ${doc.type}\nUploaded: ${doc.uploadedDate}\nStatus: ${doc.reviewerStatus}\nUploaded by: ${doc.uploadedBy}`;
@@ -143,6 +179,10 @@ export default function LibraryPage() {
     URL.revokeObjectURL(url);
   }, []);
 
+  const handleDateRangeChange = useCallback((range: { from: string | null; to: string | null }) => {
+    setDateRange(range);
+  }, []);
+
   const filters: { key: FilterType; label: string; icon: React.ReactNode }[] = [
     { key: "all", label: "All Documents", icon: <FileText className="h-3.5 w-3.5" /> },
     { key: "ai-suggested", label: "AI Suggested", icon: <Bot className="h-3.5 w-3.5" /> },
@@ -155,43 +195,52 @@ export default function LibraryPage() {
   return (
     <div className={l.page}>
       
+      <SearchAndDateFilter
+        search={search}
+        onSearchChange={setSearch}
+        sortOrder={sortOrder}
+        onSortOrderChange={setSortOrder}
+        dateRange={dateRange}
+        onDateRangeChange={handleDateRangeChange}
+        placeholder="Search documents by name..."
+      />
 
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Search documents by name..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full h-10 pl-9 pr-4 text-sm bg-white border border-slate-300 rounded-xl text-slate-800 placeholder:text-slate-400 outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-400 transition-colors"
-          />
+      <div className=" mb-6 overflow-hidden">
+        <div className="flex border-b border-slate-200 overflow-x-auto">
+          {filters.map((tab) => {
+            const isActive = activeFilter === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveFilter(tab.key)}
+                className={`flex items-center gap-2 px-5 py-4 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+                  isActive
+                    ? "border-slate-800  rounded-t-lg text-slate-900 bg-slate-50"
+                    : "border-transparent text-slate-500 hover:rounded-t-lg hover:text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                <span className={isActive ? "text-slate-800" : "text-slate-400"}>
+                  {tab.icon}
+                </span>
+                {tab.label}
+                <span
+                  className={`inline-flex items-center justify-center min-w-[22px] h-5 px-1.5 rounded-full text-xs font-semibold ${
+                    isActive
+                      ? "bg-slate-800 text-white"
+                      : "bg-slate-200 text-slate-700"
+                  }`}
+                >
+                  {documents.filter((doc) => {
+                    if (tab.key === "all") return true;
+                    if (tab.key === "ai-suggested") return doc.aiSuggested;
+                    if (tab.key === "reviewer-suggestion") return doc.reviewerStatus === "reviewer-suggestion";
+                    return doc.reviewerStatus === tab.key;
+                  }).length}
+                </span>
+              </button>
+            );
+          })}
         </div>
-
-        <button
-          onClick={() => setSortOrder((o) => (o === "desc" ? "asc" : "desc"))}
-          className="flex items-center gap-2 h-10 px-4 text-sm font-medium bg-white border border-slate-300 rounded-xl text-slate-700 hover:bg-slate-50 transition-colors whitespace-nowrap"
-        >
-          <Calendar className="h-4 w-4 text-slate-400" />
-          Date: {sortOrder === "desc" ? "Newest first" : "Oldest first"}
-        </button>
-      </div>
-
-      <div className="flex flex-wrap gap-2 mb-6">
-        {filters.map((f) => (
-          <button
-            key={f.key}
-            onClick={() => setActiveFilter(f.key)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-              activeFilter === f.key
-                ? "bg-slate-800 text-white border-slate-800"
-                : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50"
-            }`}
-          >
-            {f.icon}
-            {f.label}
-          </button>
-        ))}
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -243,7 +292,8 @@ export default function LibraryPage() {
                       return (
                         <tr
                           key={doc.id}
-                          className="hover:bg-slate-50 transition-colors"
+                          className="hover:bg-slate-50 transition-colors cursor-pointer"
+                          onClick={() => handleView(doc)}
                         >
                           {/* Document Name */}
                           <td className="px-5 py-4">
@@ -304,22 +354,20 @@ export default function LibraryPage() {
                           <td className="px-5 py-4">
                             <div className="flex items-center gap-1">
                               <button
-                                onClick={() => handleView(doc)}
-                                title="View"
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
-                              >
-                                <Eye className="h-3.5 w-3.5" />
-                                View
-                              </button>
-                              <button
-                                onClick={() => handleDownload(doc)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDownload(doc);
+                                }}
                                 title="Download"
                                 className="flex items-center justify-center h-7 w-7 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
                               >
                                 <Download className="h-3.5 w-3.5" />
                               </button>
                               <button
-                                onClick={() => handleDelete(doc)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(doc);
+                                }}
                                 title="Delete"
                                 className="flex items-center justify-center h-7 w-7 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
                               >
@@ -394,6 +442,18 @@ export default function LibraryPage() {
           </>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteDialog.isOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="Delete Document"
+        message={`Are you sure you want to delete "${deleteDialog.document?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        loading={loading}
+      />
     </div>
   );
 }
