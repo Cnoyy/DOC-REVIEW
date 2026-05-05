@@ -32,9 +32,10 @@ export async function loginUser(email: string, password: string) {
         lastName: response.user.lastName || undefined,
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Login error:", error);
-    return { success: false, error: error.message || "Failed to login" };
+    const message = error instanceof Error ? error.message : "Failed to login";
+    return { success: false, error: message };
   }
 }
 
@@ -49,9 +50,10 @@ export async function registerUser(email: string, password: string, username: st
     });
 
     return { success: true, user: { id: user.id, email: user.email } };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Register error:", error);
-    return { success: false, error: error.message || "Failed to register" };
+    const message = error instanceof Error ? error.message : "Failed to register";
+    return { success: false, error: message };
   }
 }
 

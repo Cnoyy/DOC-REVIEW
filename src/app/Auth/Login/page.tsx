@@ -51,9 +51,9 @@ export default function LoginPage() {
     }
   }
 
-  function onError(errors: any) {
+  function onError(errors: Record<string, unknown>) {
     // Show the first validation error as a toast
-    const firstError = Object.values(errors)[0] as any;
+    const firstError = Object.values(errors)[0] as { message?: string };
     if (firstError?.message) {
       showValidationToast(firstError.message);
     }
@@ -107,7 +107,7 @@ export default function LoginPage() {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer"
                       >
                         {showPassword ? (
                           <Eye className="h-5 w-5" />
@@ -133,7 +133,7 @@ export default function LoginPage() {
         </Form>
 
         <div className="mt-8 text-center text-sm text-gray-600">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link
             href="/Auth/Register"
             className="font-semibold text-[#1a1a1a] hover:underline"

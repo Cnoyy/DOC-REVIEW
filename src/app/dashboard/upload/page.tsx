@@ -16,6 +16,7 @@ import { reviewerEmailSchema } from "@/validation/auth";
 import { documentFileSchema } from "@/validation/document";
 import { useUploadPreloadStore } from "@/store/upload-preload-store";
 import { Skeleton } from "@/components/ui/skeleton";
+import { GeneratedDocument, getMockGeneratedDocument } from "@/mock/data/ai-suggestion";
 
 interface UploadedFile {
   id: string;
@@ -30,7 +31,7 @@ export default function UploadPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
   const [isAISuggestionMode, setIsAISuggestionMode] = useState(false);
-  const [generatedDocument, setGeneratedDocument] = useState<string | null>(null);
+  const [generatedDocument, setGeneratedDocument] = useState<GeneratedDocument | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showReviewerDialog, setShowReviewerDialog] = useState(false);
   const [reviewerEmails, setReviewerEmails] = useState<string[]>(['']);
@@ -42,6 +43,7 @@ export default function UploadPage() {
 
   useEffect(() => {
     if (preloadedFile && preloadedSuggestions) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUploadedFiles([preloadedFile]);
       setIsAISuggestionMode(true);
       aiSuggestions.preloadSuggestions(preloadedSuggestions);
@@ -152,6 +154,7 @@ export default function UploadPage() {
   const handleRevert = useCallback(() => {
     setIsAISuggestionMode(false);
     aiSuggestions.clearSuggestions();
+    setGeneratedDocument(null);
   }, [aiSuggestions]);
 
   const handleAccept = useCallback(async () => {
@@ -163,34 +166,10 @@ export default function UploadPage() {
       // Simulate document generation with AI suggestions
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Create a document content based on AI suggestions
-      const documentContent = `
-AI-Enhanced Document Analysis
-================================
-
-Original Document: ${uploadedFiles[0].name}
-Generated on: ${new Date().toLocaleDateString()}
-
-AI Analysis Summary:
-${aiSuggestions.suggestions.summary}
-
-Risk Flags Identified:
-${aiSuggestions.suggestions.riskFlags.map(flag => `  - ${flag}`).join('\n')}
-
-Recommendations:
-${aiSuggestions.suggestions.recommendations.map(rec => `  - ${rec}`).join('\n')}
-
-Additional Suggestions:
-${aiSuggestions.suggestions.moreSuggestions.map(suggestion => `  - ${suggestion}`).join('\n')}
-
----
-This document was generated using AI analysis powered by DocuReview.
-      `.trim();
-      
-      // Create blob and download URL
-      const blob = new Blob([documentContent], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      setGeneratedDocument(url);
+      // Get mock generated document based on original file name
+      const originalFileName = uploadedFiles[0].name;
+      const generatedDoc = getMockGeneratedDocument(originalFileName);
+      setGeneratedDocument(generatedDoc);
       
     } catch (error) {
       console.error('Document generation failed:', error);
@@ -210,17 +189,16 @@ This document was generated using AI analysis powered by DocuReview.
   const handleDownload = useCallback(() => {
     if (!generatedDocument) return;
     
+    // Create download link
     const link = document.createElement('a');
-    link.href = generatedDocument;
-    link.download = `AI-Analyzed-${uploadedFiles[0]?.name || 'document'}.txt`;
+    link.href = generatedDocument.downloadUrl;
+    link.download = generatedDocument.name;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     
-    // Clean up the URL after download
-    URL.revokeObjectURL(generatedDocument);
-    setGeneratedDocument(null);
-  }, [generatedDocument, uploadedFiles]);
+    showSuccessToast('Document downloaded successfully');
+  }, [generatedDocument]);
 
   const handleAddReviewerEmail = useCallback(() => {
     setReviewerEmails([...reviewerEmails, '']);
@@ -296,6 +274,191 @@ This document was generated using AI analysis powered by DocuReview.
         </div>
 
         <div className="w-full max-w-3xl">
+          {/* AI Suggestions Card - Show on top when available */}
+          {(aiSuggestions.suggestions || aiSuggestions.loading) && (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                {aiSuggestions.loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent"></div>
+                    <h2 className="text-lg font-semibold text-slate-800">Processing AI Suggestions...</h2>
+                  </div>
+                ) : (
+                  <>
+                    <Bot className="h-5 w-5 text-indigo-600" />
+                    <h2 className="text-lg font-semibold text-slate-800">AI Suggestions</h2>
+                  </>
+                )}
+              </div>
+              
+              {aiSuggestions.error && (
+                <div className="text-red-600 text-sm mb-4 p-3 bg-red-50 rounded-lg border border-red-100">
+                  Error: {aiSuggestions.error}
+                </div>
+              )}
+              
+              {aiSuggestions.loading ? (
+                <div className="space-y-4">
+                  <div className="bg-slate-50 rounded-lg p-6 text-center">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent"></div>
+                      <div className="space-y-2">
+                        <p className="text-sm text-slate-600">Analyzing your document...</p>
+                        <p className="text-xs text-slate-500">This may take a few moments</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-slate-700 mb-2">Summary</h3>
+                  <p className="text-sm text-slate-600">{aiSuggestions.suggestions?.summary}</p>
+                </div>
+                
+                {aiSuggestions.suggestions?.riskFlags && aiSuggestions.suggestions.riskFlags.length > 0 && (
+                  <div className="rounded-lg p-4 border border-orange-100">
+                    <h3 className="text-sm font-medium text-red-600 mb-3">Risk Flags</h3>
+                    <div className="space-y-2">
+                      {aiSuggestions.suggestions.riskFlags.map((flag, index) => {
+                        const priorityStyles = {
+                          high: 'bg-red-50 border-red-200',
+                          medium: 'bg-yellow-50 border-yellow-200',
+                          low: 'bg-green-50 border-green-200'
+                        };
+                        const priorityLabelStyles = {
+                          high: 'bg-red-100 text-red-700',
+                          medium: 'bg-yellow-100 text-yellow-700',
+                          low: 'bg-green-100 text-green-700'
+                        };
+                        const priority = flag.priority || 'low';
+                        const priorityLabel = priority.charAt(0).toUpperCase() + priority.slice(1);
+                        return (
+                          <div
+                            key={index}
+                            className={`px-3 py-2 rounded-lg border text-sm ${priorityStyles[priority]}`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className={`font-medium text-xs px-2 py-1 rounded ${priorityLabelStyles[priority]}`}>{priorityLabel}</span>
+                              <span className="text-slate-700">{flag.message}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                
+                {aiSuggestions.suggestions?.recommendations && aiSuggestions.suggestions.recommendations.length > 0 && (
+                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                    <h3 className="text-sm font-medium text-blue-700 mb-2">Recommendations</h3>
+                    <ul className="list-disc list-inside text-sm text-slate-600 space-y-1">
+                      {aiSuggestions.suggestions.recommendations.map((rec, index) => (
+                        <li key={index}>{rec}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                {aiSuggestions.suggestions?.moreSuggestions && aiSuggestions.suggestions.moreSuggestions.length > 0 && (
+                  <div className="bg-green-50 rounded-lg p-4 border border-green-100">
+                    <h3 className="text-sm font-medium text-green-700 mb-2">More Suggestions</h3>
+                    <ul className="list-disc list-inside text-sm text-slate-600 space-y-1">
+                      {aiSuggestions.suggestions.moreSuggestions.map((suggestion, index) => (
+                        <li key={index}>{suggestion}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+              )}
+              
+              {/* Accept/Decline Buttons */}
+              {!aiSuggestions.loading && aiSuggestions.suggestions && (
+                <div className="mt-6 pt-6 border-t border-slate-200">
+                  {generatedDocument ? (
+                    <div className="space-y-4">
+                      <div className="text-left">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckCircle className="h-5 w-5 text-emerald-600" />
+                          <h3 className="text-lg font-semibold text-slate-800">AI-Suggested Document Generated Successfully</h3>
+                        </div>
+                        <p className="text-sm text-slate-600">
+                          Download your AI-enhanced document below
+                        </p>
+                      </div>
+                      
+                      {/* Document Card */}
+                      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                          <div className="flex items-center gap-4 w-full flex-1 min-w-0">
+                            <div className="bg-blue-100 rounded-lg p-3 flex-shrink-0">
+                              <FileText className="h-6 w-6 text-blue-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-semibold text-slate-900 mb-1 truncate">{generatedDocument.name}</h4>
+                              <p className="text-sm text-slate-600 mb-2">{generatedDocument.content}</p>
+                              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                                <span className="flex items-center gap-1">
+                                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                  {generatedDocument.type}
+                                </span>
+                                <span>{generatedDocument.size}</span>
+                                <span>Created {new Date(generatedDocument.createdAt).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <Button
+                            variant="mybutton"
+                            onClick={handleDownload}
+                            className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start"
+                          >
+                            <Download className="h-4 w-4" />
+                            Download
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col">
+                      <p className="text-sm text-slate-600">
+                        Would you like to generate an enhanced document with these AI suggestions?
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2 mt-4">
+                        <Button
+                          onClick={handleAccept}
+                          disabled={isGenerating}
+                          className="px-4 py-2 cursor-pointer bg-green-100 text-green-700 hover:bg-green-200 border border-green-300 flex-1 min-w-fit"
+                        >
+                          {isGenerating ? (
+                            <>
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-green-300 border-t-transparent mr-2" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <ThumbsUp className="h-4 w-4 mr-2" />
+                              Accept
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          variant="mycancel"
+                          onClick={handleDecline}
+                          className="px-4 py-2 hover:bg-slate-700 hover:text-white cursor-pointer bg-red-100 text-red-700 hover:bg-red-200 border border-red-300 flex-1 min-w-fit"
+                        >
+                          <ThumbsDown className="h-4 w-4 mr-2" />
+                          Reject
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Upload Area */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
             <div
@@ -404,180 +567,8 @@ This document was generated using AI analysis powered by DocuReview.
               )}
             </div>
           </div>
+        </div>
         
-        {/* AI Suggestions Card */}
-        {(aiSuggestions.suggestions || aiSuggestions.loading) && (
-          <div className="w-full max-w-3xl mt-6">
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-              <div className="flex items-center gap-2 mb-4">
-                {aiSuggestions.loading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent"></div>
-                    <h2 className="text-lg font-semibold text-slate-800">Processing AI Suggestions...</h2>
-                  </div>
-                ) : (
-                  <>
-                    <Bot className="h-5 w-5 text-indigo-600" />
-                    <h2 className="text-lg font-semibold text-slate-800">AI Suggestions</h2>
-                  </>
-                )}
-              </div>
-              
-              {aiSuggestions.error && (
-                <div className="text-red-600 text-sm mb-4 p-3 bg-red-50 rounded-lg border border-red-100">
-                  Error: {aiSuggestions.error}
-                </div>
-              )}
-              
-              {aiSuggestions.loading ? (
-                <div className="space-y-4">
-                  <div className="bg-slate-50 rounded-lg p-6 text-center">
-                    <div className="flex flex-col items-center gap-4">
-                      <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent"></div>
-                      <div className="space-y-2">
-                        <p className="text-sm text-slate-600">Analyzing your document...</p>
-                        <p className="text-xs text-slate-500">This may take a few moments</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <h3 className="text-sm font-medium text-slate-700 mb-2">Summary</h3>
-                  <p className="text-sm text-slate-600">{aiSuggestions.suggestions?.summary}</p>
-                </div>
-                
-                {aiSuggestions.suggestions?.riskFlags && aiSuggestions.suggestions.riskFlags.length > 0 && (
-                  <div className="rounded-lg p-4 border border-orange-100">
-                    <h3 className="text-sm font-medium text-red-600 mb-3">Risk Flags</h3>
-                    <div className="space-y-2">
-                      {aiSuggestions.suggestions.riskFlags.map((flag, index) => {
-                        const priorityStyles = {
-                          high: 'bg-red-50 border-red-200',
-                          medium: 'bg-yellow-50 border-yellow-200',
-                          low: 'bg-green-50 border-green-200'
-                        };
-                        const priorityLabelStyles = {
-                          high: 'bg-red-100 text-red-700',
-                          medium: 'bg-yellow-100 text-yellow-700',
-                          low: 'bg-green-100 text-green-700'
-                        };
-                        const priority = flag.priority || 'low';
-                        const priorityLabel = priority.charAt(0).toUpperCase() + priority.slice(1);
-                        return (
-                          <div
-                            key={index}
-                            className={`px-3 py-2 rounded-lg border text-sm ${priorityStyles[priority]}`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className={`font-medium text-xs px-2 py-1 rounded ${priorityLabelStyles[priority]}`}>{priorityLabel}</span>
-                              <span className="text-slate-700">{flag.message}</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                
-                {aiSuggestions.suggestions?.recommendations && aiSuggestions.suggestions.recommendations.length > 0 && (
-                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-                    <h3 className="text-sm font-medium text-blue-700 mb-2">Recommendations</h3>
-                    <ul className="list-disc list-inside text-sm text-slate-600 space-y-1">
-                      {aiSuggestions.suggestions.recommendations.map((rec, index) => (
-                        <li key={index}>{rec}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                
-                {aiSuggestions.suggestions?.moreSuggestions && aiSuggestions.suggestions.moreSuggestions.length > 0 && (
-                  <div className="bg-green-50 rounded-lg p-4 border border-green-100">
-                    <h3 className="text-sm font-medium text-green-700 mb-2">More Suggestions</h3>
-                    <ul className="list-disc list-inside text-sm text-slate-600 space-y-1">
-                      {aiSuggestions.suggestions.moreSuggestions.map((suggestion, index) => (
-                        <li key={index}>{suggestion}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-              )}
-              
-              {/* Accept/Decline Buttons */}
-              {!aiSuggestions.loading && aiSuggestions.suggestions && (
-                <div className="mt-6 pt-6 border-t border-slate-200">
-                  {generatedDocument ? (
-                    <div className="flex flex-col items-center gap-4">
-                      <div className="text-center">
-                        <div className="flex items-center gap-2 mb-2">
-                          <CheckCircle className="h-5 w-5 text-emerald-600" />
-                          <h3 className="text-lg font-semibold text-slate-800">Document Generated Successfully!</h3>
-                        </div>
-                        <p className="text-sm text-slate-600">
-                          Your AI-enhanced document is ready for download.
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="mybutton"
-                          onClick={handleDownload}
-                          className="px-4 py-2 cursor-pointer"
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Download
-                        </Button>
-                        <Button
-                          variant="mycancel"
-                          onClick={handleDecline}
-                          className="px-4 py-2 hover:bg-slate-700 hover:text-white cursor-pointer"
-                        >
-                          Start New Analysis
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col">
-                      <p className="text-sm text-slate-600 whitespace-nowrap">
-                        Would you like to generate an enhanced document with these AI suggestions?
-                      </p>
-                      <div className="flex items-center gap-2 mt-4">
-                        <Button
-                          onClick={handleAccept}
-                          disabled={isGenerating}
-                          className="px-4 py-2 cursor-pointer bg-green-100 text-green-700 hover:bg-green-200 border border-green-300"
-                        >
-                          {isGenerating ? (
-                            <>
-                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-green-300 border-t-transparent mr-2" />
-                              Generating...
-                            </>
-                          ) : (
-                            <>
-                              <ThumbsUp className="h-4 w-4 mr-2" />
-                              Accept
-                            </>
-                          )}
-                        </Button>
-                        <Button
-                          variant="mycancel"
-                          onClick={handleDecline}
-                          className="px-4 py-2 hover:bg-slate-700 hover:text-white cursor-pointer bg-red-100 text-red-700 hover:bg-red-200 border border-red-300"
-                        >
-                          <ThumbsDown className="h-4 w-4 mr-2" />
-                          Reject
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-      
       {/* Submit Dialog */}
       <MyDialog open={showSubmitDialog} onClose={() => setShowSubmitDialog(false)}>
         <div className="text-center">
@@ -588,10 +579,10 @@ This document was generated using AI analysis powered by DocuReview.
           </p>
         </div>
           
-          <div className="flex justify-center gap-3">
+          <div className="flex flex-col sm:flex-row justify-center gap-3 w-full">
             <Button
               variant="mycancel"
-              className="py-3 text-base flex items-center justify-center gap-2 bg-slate-500 text-white hover:bg-slate-600 hover:text-white cursor-pointer px-6"
+              className="py-3 text-base flex items-center justify-center gap-2 bg-slate-500 text-white hover:bg-slate-600 hover:text-white cursor-pointer px-6 w-full sm:w-auto"
               onClick={() => {
                 if (uploadedFiles.length > 1) {
                   showValidationToast('Only one document can be processed at a time');
@@ -600,6 +591,7 @@ This document was generated using AI analysis powered by DocuReview.
                 if (uploadedFiles.length > 0) {
                   aiSuggestions.fetchAISuggestions(uploadedFiles[0].name);
                   setIsAISuggestionMode(true);
+                  setGeneratedDocument(null);
                 }
                 setShowSubmitDialog(false);
               }}
@@ -617,7 +609,7 @@ This document was generated using AI analysis powered by DocuReview.
             
             <Button
               variant="mybutton"
-              className="py-3 text-base flex items-center justify-center gap-2 cursor-pointer px-6"
+              className="py-3 text-base flex items-center justify-center gap-2 cursor-pointer px-6 w-full sm:w-auto"
               onClick={() => {
                 setShowSubmitDialog(false);
                 setShowReviewerDialog(true);
@@ -631,23 +623,23 @@ This document was generated using AI analysis powered by DocuReview.
       
       {/* Reviewer Dialog */}
       <MyDialog open={showReviewerDialog} onClose={() => setShowReviewerDialog(false)}>
-        <div className="text-center mb-6">
-          <h2 className="text-xl font-semibold text-slate-900 mb-4">Send to Reviewer</h2>
-          <p className="text-base text-slate-600 leading-relaxed">
+        <div className="text-center mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-slate-900 mb-2 sm:mb-4">Send to Reviewer</h2>
+          <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
             Enter reviewer email addresses to send your document for reviewing
           </p>
         </div>
         
-        <div className="space-y-3 mb-6">
+        <div className="space-y-3 mb-4 sm:mb-6">
           {reviewerEmails.map((email, index) => (
             <div key={index} className="flex items-center gap-2">
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <input
                   type="email"
                   placeholder="Enter reviewer email"
                   value={email}
                   onChange={(e) => handleReviewerEmailChange(index, e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 text-sm ${
+                  className={`w-full px-3 sm:px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 text-sm ${
                     emailErrors[index] 
                       ? 'border-red-500 focus:ring-red-500' 
                       : 'border-slate-300 focus:ring-slate-500'
@@ -660,20 +652,20 @@ This document was generated using AI analysis powered by DocuReview.
               {index === reviewerEmails.length - 1 && (
                 <button
                   onClick={handleAddReviewerEmail}
-                  className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-500 text-white hover:bg-slate-600 transition-colors cursor-pointer"
+                  className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-500 text-white hover:bg-slate-600 transition-colors cursor-pointer flex-shrink-0"
                   title="Add more reviewers"
                 >
-                  <Plus className="h-5 w-5" />
+                  <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
               )}
             </div>
           ))}
         </div>
         
-        <div className="flex justify-center gap-3">
+        <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-3">
           <Button
             variant="mycancel"
-            className="py-3 text-base flex items-center justify-center gap-2 cursor-pointer px-6"
+            className="py-2.5 sm:py-3 text-sm sm:text-base flex items-center justify-center gap-2 cursor-pointer px-4 sm:px-6 w-full sm:w-auto"
             onClick={handleReviewerCancel}
           >
             Cancel
@@ -681,7 +673,7 @@ This document was generated using AI analysis powered by DocuReview.
           
           <Button
             variant="mybutton"
-            className="py-3 text-base flex items-center justify-center gap-2 cursor-pointer px-6"
+            className="py-2.5 sm:py-3 text-sm sm:text-base flex items-center justify-center gap-2 cursor-pointer px-4 sm:px-6 w-full sm:w-auto"
             onClick={handleReviewerSent}
             disabled={sendToReviewer.loading}
           >

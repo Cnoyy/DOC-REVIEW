@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import {
   Calendar as CalendarIcon,
   X,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DateRangeCalendar } from "@/components/ui/date-range-calendar";
@@ -87,7 +88,7 @@ export default function SearchAndDateFilter({
   return (
     <div className="flex flex-col lg:flex-row gap-3 mb-4">
       <div className="relative flex-1">
-        <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
         <input
           type="text"
           placeholder={placeholder}
@@ -97,20 +98,20 @@ export default function SearchAndDateFilter({
         />
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex justify-end gap-2 w-full lg:w-auto">
         {/* Date Range Filter */}
-        <div className="relative">
+        <div className="relative max-w-full">
           <div
             onClick={() => setShowCalendar(!showCalendar)}
-            className="flex items-center gap-2 h-10 px-4 text-sm font-medium bg-white border border-slate-300 rounded-xl text-slate-700 hover:bg-slate-50 transition-colors whitespace-nowrap cursor-pointer"
+            className="flex items-center gap-2 h-10 px-4 text-sm font-medium bg-white border border-slate-300 rounded-xl text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer max-w-full"
           >
-            <CalendarIcon className="h-4 w-4 text-slate-400" />
+            <CalendarIcon className="h-4 w-4 text-slate-400 flex-shrink-0" />
             {dateRange.from || dateRange.to ? (
-              <span className="text-slate-700 font-medium">
+              <span className="text-slate-700 font-medium truncate">
                 {formatDateForDisplay(dateRange.from)} - {formatDateForDisplay(dateRange.to)}
               </span>
             ) : (
-              <span className="text-slate-700">Date Range</span>
+              <span className="text-slate-700 whitespace-nowrap">Date Range</span>
             )}
             {(dateRange.from || dateRange.to) && (
               <Button
@@ -121,7 +122,7 @@ export default function SearchAndDateFilter({
                   clearDateRange();
                   setShowCalendar(false);
                 }}
-                className="ml-1 text-slate-400 hover:text-slate-600"
+                className="ml-1 flex-shrink-0 h-6 w-6 text-slate-400 hover:text-slate-600 rounded-full"
               >
                 <X className="h-3 w-3" />
               </Button>
@@ -130,14 +131,14 @@ export default function SearchAndDateFilter({
 
           {/* Calendar Popup */}
           {showCalendar && (
-            <div className="absolute top-full mt-2 right-0 z-50 bg-white border border-slate-200 rounded-xl shadow-lg p-4 min-w-[320px]">
+            <div className="absolute top-full mt-2 right-0 sm:right-0 z-50 bg-white border border-slate-200 rounded-xl shadow-lg p-4 w-[320px] max-w-[calc(100vw-2rem)] origin-top-right">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-slate-900">Select Date Range</h3>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowCalendar(false)}
-                  className="text-slate-400 hover:text-slate-600"
+                  className="text-slate-400 hover:text-slate-600 h-8 w-8 rounded-full"
                 >
                   <X className="h-4 w-4" />
                 </Button>

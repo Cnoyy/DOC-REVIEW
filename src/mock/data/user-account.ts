@@ -3,8 +3,8 @@ import { UserProfile, UserProfileResponse, UpdateProfileResponse, ChangePassword
 // Mock user profile data
 const mockUserProfile: UserProfile = {
   id: 'user-001',
-  name: 'John Doe',
-  email: 'john.doe@example.com',
+  name: 'shinoy',
+  email: 'shinoy@gmail.com',
   createdAt: '2024-01-15T10:30:00Z',
   lastLogin: '2025-01-20T14:25:00Z',
 };
