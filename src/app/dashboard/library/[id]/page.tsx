@@ -58,16 +58,16 @@ function BackButton({ onClick }: { onClick: () => void }) {
 
 function MetaRow({ detail }: { detail: DocumentDetail }) {
   return (
-    <div className="flex flex-wrap gap-5 mt-5 pt-5 border-t border-slate-100">
-      <div className="flex items-center gap-2 text-sm text-slate-500">
-        <User className="h-4 w-4 text-slate-400" />
-        <span>
+    <div className="flex flex-wrap items-center gap-3 sm:gap-5 mt-5 pt-5 border-t border-slate-100">
+      <div className="flex items-center gap-2 text-sm text-slate-500 shrink-0">
+        <User className="h-4 w-4 text-slate-400 shrink-0" />
+        <span className="truncate">
           Uploaded by <span className="font-medium text-slate-700">{detail.uploadedBy}</span>
         </span>
       </div>
-      <div className="flex items-center gap-2 text-sm text-slate-500">
-        <Calendar className="h-4 w-4 text-slate-400" />
-        <span>
+      <div className="flex items-center gap-2 text-sm text-slate-500 shrink-0">
+        <Calendar className="h-4 w-4 text-slate-400 shrink-0" />
+        <span className="truncate">
           Uploaded{" "}
           <span className="font-medium text-slate-700">
             {new Date(detail.uploadedDate).toLocaleDateString("en-US", {
@@ -78,9 +78,9 @@ function MetaRow({ detail }: { detail: DocumentDetail }) {
           </span>
         </span>
       </div>
-      <div className="flex items-center gap-2 text-sm text-slate-500">
-        <HardDrive className="h-4 w-4 text-slate-400" />
-        <span className="font-medium text-slate-700">{detail.fileSize}</span>
+      <div className="flex items-center gap-2 text-sm text-slate-500 shrink-0">
+        <HardDrive className="h-4 w-4 text-slate-400 shrink-0" />
+        <span className="font-medium text-slate-700 truncate">{detail.fileSize}</span>
       </div>
     </div>
   );
@@ -109,9 +109,9 @@ function DocContentPanel({ content, name }: { content: string; name: string }) {
 function ReviewerSuggestionView({ detail }: { detail: DocumentDetail }) {
   const rs = detail.reviewerSuggestions;
   return (
-    <div className="flex gap-6 items-start">
+    <div className="flex flex-col lg:flex-row gap-6 items-start">
       <DocContentPanel content={detail.documentContent ?? ""} name={detail.name} />
-      <div className="w-80 flex-shrink-0 bg-white rounded-2xl border border-slate-200 shadow-sm">
+      <div className="w-full lg:w-80 flex-shrink-0 bg-white rounded-2xl border border-slate-200 shadow-sm">
         <div className="flex items-center gap-2 px-5 py-3.5 border-b border-slate-100">
           <UserCheck className="h-4 w-4 text-indigo-500" />
           <span className="text-sm font-semibold text-slate-700">Reviewer Suggestions</span>
@@ -229,9 +229,9 @@ function PendingView({
   onSendAgain: () => void;
 }) {
   return (
-    <div className="flex gap-6 items-start">
+    <div className="flex flex-col lg:flex-row gap-6 items-start">
       <DocContentPanel content={detail.documentContent ?? ""} name={detail.name} />
-      <div className="w-80 flex-shrink-0">
+      <div className="w-full lg:w-80 flex-shrink-0">
         <div className="bg-white rounded-2xl border border-amber-200 shadow-sm">
           <div className="flex items-center gap-2 px-5 py-3.5 border-b border-amber-100 bg-amber-50 rounded-t-2xl">
             <Clock className="h-4 w-4 text-amber-600" />
@@ -273,9 +273,9 @@ function PendingView({
 
 function ApprovedView({ detail }: { detail: DocumentDetail }) {
   return (
-    <div className="flex gap-6 items-start">
+    <div className="flex flex-col lg:flex-row gap-6 items-start">
       <DocContentPanel content={detail.documentContent ?? ""} name={detail.name} />
-      <div className="w-80 flex-shrink-0 bg-white rounded-2xl border border-emerald-200 shadow-sm">
+      <div className="w-full lg:w-80 flex-shrink-0 bg-white rounded-2xl border border-emerald-200 shadow-sm">
         <div className="flex items-center gap-2 px-5 py-3.5 border-b border-emerald-100 bg-emerald-50 rounded-t-2xl">
           <CheckCircle className="h-4 w-4 text-emerald-600" />
           <span className="text-sm font-semibold text-emerald-800">Approval Details</span>
@@ -317,9 +317,9 @@ function ApprovedView({ detail }: { detail: DocumentDetail }) {
 
 function RejectedView({ detail }: { detail: DocumentDetail }) {
   return (
-    <div className="flex gap-6 items-start">
+    <div className="flex flex-col lg:flex-row gap-6 items-start">
       <DocContentPanel content={detail.documentContent ?? ""} name={detail.name} />
-      <div className="w-80 flex-shrink-0 bg-white rounded-2xl border border-red-200 shadow-sm">
+      <div className="w-full lg:w-80 flex-shrink-0 bg-white rounded-2xl border border-red-200 shadow-sm">
         <div className="flex items-center gap-2 px-5 py-3.5 border-b border-red-100 bg-red-50 rounded-t-2xl">
           <XCircle className="h-4 w-4 text-red-600" />
           <span className="text-sm font-semibold text-red-800">Rejection Details</span>
@@ -605,7 +605,7 @@ export default function DocumentDetailPage() {
           </div>
 
           {/* Content skeleton */}
-          <div className="flex gap-6">
+          <div className="flex flex-col lg:flex-row gap-6">
             <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm">
               <div className="flex items-center gap-2 px-5 py-3.5 border-b border-slate-100">
                 <Skeleton className="h-4 w-4" />
@@ -624,7 +624,7 @@ export default function DocumentDetailPage() {
             </div>
 
             {/* Side panel skeleton */}
-            <div className="w-80 flex-shrink-0 bg-white rounded-2xl border border-slate-200 shadow-sm">
+            <div className="w-full lg:w-80 flex-shrink-0 bg-white rounded-2xl border border-slate-200 shadow-sm">
               <div className="flex items-center gap-2 px-5 py-3.5 border-b border-slate-100">
                 <Skeleton className="h-4 w-4" />
                 <Skeleton className="h-4 w-32" />
@@ -674,12 +674,12 @@ export default function DocumentDetailPage() {
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm px-6 py-5">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-4 min-w-0">
               <div className="flex-shrink-0 h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center">
                 <FileText className="h-6 w-6 text-slate-500" />
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-slate-900 leading-tight">{detail.name}</h1>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-xl font-bold text-slate-900 leading-tight break-words">{detail.name}</h1>
                 <div className="flex flex-wrap items-center gap-2 mt-2">
                   <span
                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusBadge.className}`}

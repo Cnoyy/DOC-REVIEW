@@ -46,6 +46,7 @@ export function UserNav({ isCollapsed = false }: UserNavProps) {
  }, [isOpen]);
 
  useEffect(() => {
+ // eslint-disable-next-line react-hooks/set-state-in-effect
  if (isCollapsed) setIsOpen(false);
  }, [isCollapsed]);
 

@@ -43,6 +43,7 @@ export default function AccountSettingsPage() {
   // Update form when profile loads
   useEffect(() => {
     if (profile) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(profile.name);
       setEmail(profile.email);
       setOriginalName(profile.name);
@@ -230,9 +231,9 @@ export default function AccountSettingsPage() {
                 <button
                   type="button"
                   onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                 >
-                  {showPasswords.current ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPasswords.current ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                 </button>
               </div>
             </div>
@@ -252,9 +253,9 @@ export default function AccountSettingsPage() {
                 <button
                   type="button"
                   onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                 >
-                  {showPasswords.new ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPasswords.new ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                 </button>
               </div>
             </div>
@@ -274,9 +275,9 @@ export default function AccountSettingsPage() {
                 <button
                   type="button"
                   onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                 >
-                  {showPasswords.confirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPasswords.confirm ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                 </button>
               </div>
             </div>

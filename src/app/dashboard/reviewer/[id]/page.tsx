@@ -77,6 +77,7 @@ export default function ReviewerDetailPage() {
     if (detail?.contents) {
       const all: Record<number, boolean> = {};
       detail.contents.forEach((_, i) => { all[i] = true; });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setExpandedSections(all);
     }
   }, [detail]);
@@ -89,6 +90,7 @@ export default function ReviewerDetailPage() {
   useEffect(() => {
     if (aiSuggestions.suggestions) {
       const text = formatAISuggestionAsReviewNote(aiSuggestions.suggestions);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setReviewNotes(text);
       setTimeout(() => textareaRef.current?.focus(), 50);
     }
@@ -251,12 +253,12 @@ export default function ReviewerDetailPage() {
       {/* Document header card */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm px-6 py-5 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-          <div className="flex items-start gap-4">
+          <div className="flex items-start gap-4 min-w-0">
             <div className="flex-shrink-0 h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center">
               <FileText className="h-6 w-6 text-slate-500" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900 leading-tight">{detail.name}</h1>
+            <div className="min-w-0">
+              <h1 className="text-xl font-bold text-slate-900 leading-tight break-words">{detail.name}</h1>
               <div className="flex flex-wrap items-center gap-2 mt-2">
                 <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${status.className}`}>
                   {status.label}
@@ -273,31 +275,30 @@ export default function ReviewerDetailPage() {
               </div>
             </div>
           </div>
-
-                  </div>
+        </div>
 
         {/* Meta */}
-        <div className="flex flex-wrap gap-5 mt-4 pt-4 border-t border-slate-100 text-sm text-slate-500">
-          <span className="flex items-center gap-2">
-            <User className="h-4 w-4 text-slate-400" />
-            Submitted by <span className="font-medium text-slate-700 ml-1">{detail.submittedBy}</span>
+        <div className="flex flex-wrap items-center gap-5 mt-4 pt-4 border-t border-slate-100 text-sm text-slate-500">
+          <span className="flex items-center gap-2 shrink-0">
+            <User className="h-4 w-4 text-slate-400 shrink-0" />
+            <span className="truncate">Submitted by <span className="font-medium text-slate-700 ml-1">{detail.submittedBy}</span></span>
           </span>
-          <span className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-slate-400" />
-            {new Date(detail.submittedDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+          <span className="flex items-center gap-2 shrink-0">
+            <Calendar className="h-4 w-4 text-slate-400 shrink-0" />
+            <span className="truncate">{new Date(detail.submittedDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>
           </span>
-          <span className="flex items-center gap-2">
-            <HardDrive className="h-4 w-4 text-slate-400" />
-            {detail.fileSize}
+          <span className="flex items-center gap-2 shrink-0">
+            <HardDrive className="h-4 w-4 text-slate-400 shrink-0" />
+            <span className="truncate">{detail.fileSize}</span>
           </span>
           
           {/* Approve / Reject buttons — only for pending, shown in meta section */}
           {isPending && (
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-auto mt-2 sm:mt-0">
               <Button
                 onClick={handleApprove}
                 disabled={loadingApprove || loadingReject || loadingSend}
-                className="flex items-center justify-center gap-2 cursor-pointer bg-emerald-600 text-white hover:bg-emerald-700 border border-emerald-600 rounded-xl px-4 py-2.5 text-sm font-medium"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 cursor-pointer bg-emerald-600 text-white hover:bg-emerald-700 border border-emerald-600 rounded-xl px-4 py-2.5 text-sm font-medium"
               >
                 {loadingApprove ? (
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
@@ -311,7 +312,7 @@ export default function ReviewerDetailPage() {
               <Button
                 onClick={handleReject}
                 disabled={loadingApprove || loadingReject || loadingSend}
-                className="flex items-center justify-center gap-2 cursor-pointer bg-red-600 text-white hover:bg-red-700 border border-red-600 rounded-xl px-4 py-2.5 text-sm font-medium"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 cursor-pointer bg-red-600 text-white hover:bg-red-700 border border-red-600 rounded-xl px-4 py-2.5 text-sm font-medium"
               >
                 {loadingReject ? (
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
