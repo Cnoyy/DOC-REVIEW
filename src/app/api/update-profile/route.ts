@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { updateUserProfileMock } from '@/mock/data/user-account';
+import { encryptServer } from '@/lib/crypto-server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +14,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return NextResponse.json(
@@ -22,7 +22,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate name length
     if (name.trim().length < 2) {
       return NextResponse.json(
         { success: false, message: 'Name must be at least 2 characters long' },
@@ -30,13 +29,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const mockData = await updateUserProfileMock(name, email);
-    return NextResponse.json(mockData);
+    const result = await updateUserProfileMock(name, email);
+    const encrypted = encryptServer(JSON.stringify(result));
+    return NextResponse.json({ data: encrypted });
   } catch (error) {
     console.error('Update Profile API Error:', error);
-    return NextResponse.json(
-      { success: false, message: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: 'Internal server error' }, { status: 500 });
   }
 }

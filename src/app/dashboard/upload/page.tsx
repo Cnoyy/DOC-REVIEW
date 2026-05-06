@@ -186,17 +186,11 @@ export default function UploadPage() {
     setGeneratedDocument(null);
   }, [aiSuggestions]);
 
-  const handleDownload = useCallback(() => {
+  const handleDownload = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
     if (!generatedDocument) return;
     
-    // Create download link
-    const link = document.createElement('a');
-    link.href = generatedDocument.downloadUrl;
-    link.download = generatedDocument.name;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
+    // Only show success toast, no actual download
     showSuccessToast('Document downloaded successfully');
   }, [generatedDocument]);
 
@@ -409,14 +403,14 @@ export default function UploadPage() {
                             </div>
                           </div>
                           
-                          <Button
-                            variant="mybutton"
+                          <button
+                            type="button"
                             onClick={handleDownload}
-                            className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start"
+                            className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start bg-slate-800 text-white hover:bg-slate-700 active:bg-slate-700 border border-slate-700 rounded-lg px-4 py-2 text-sm font-medium transition-all cursor-pointer"
                           >
                             <Download className="h-4 w-4" />
                             Download
-                          </Button>
+                          </button>
                         </div>
                       </div>
                     </div>

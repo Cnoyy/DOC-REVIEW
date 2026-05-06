@@ -125,7 +125,7 @@ export default function LoginPage() {
               type="submit"
               variant="mybutton"
               disabled={form.formState.isSubmitting}
-              className="w-full py-6 rounded-xl font-bold text-base shadow-md"
+              className="w-full py-6 rounded-xl font-bold text-base shadow-md cursor-pointer"
             >
               {form.formState.isSubmitting ? "Signing In..." : "Sign In"}
             </Button>

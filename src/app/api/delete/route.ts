@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { DeleteResponse } from '@/service/documents-library';
+import { encryptServer } from '@/lib/crypto-server';
 
 export async function DELETE(request: NextRequest) {
   try {
@@ -12,33 +12,16 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // TODO: Implement actual delete logic here
-    // For now, we'll simulate a successful delete
     console.log(`Deleting document: ${documentId}`);
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // In a real implementation, you would:
-    // 1. Delete from database
-    // 2. Delete file from storage
-    // 3. Update any related records
-    // 4. Handle any cleanup
-
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const response: DeleteResponse = {
-      success: true,
-      message: 'Document deleted successfully'
-    };
-
-    return NextResponse.json(response);
+    const result = { success: true, message: 'Document deleted successfully' };
+    const encrypted = encryptServer(JSON.stringify(result));
+    return NextResponse.json({ data: encrypted });
   } catch (error) {
     console.error('Delete API Error:', error);
-    
-    const response: DeleteResponse = {
-      success: false,
-      message: 'Failed to delete document'
-    };
-
-    return NextResponse.json(response, { status: 500 });
+    const result = { success: false, message: 'Failed to delete document' };
+    const encrypted = encryptServer(JSON.stringify(result));
+    return NextResponse.json({ data: encrypted }, { status: 500 });
   }
 }

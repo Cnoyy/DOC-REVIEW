@@ -9,11 +9,11 @@ export function middleware(request: NextRequest) {
   
   // Check if the path is a protected dashboard route
   if (protectedRoutes.some((route) => pathname.startsWith(route))) {
-    // Check for authentication token in cookies
-    const token = request.cookies.get("auth-token");
+    // Check for WorkOS auth_session cookie
+    const authSession = request.cookies.get("auth_session");
     
-    if (!token) {
-      // Redirect to 404 page if no auth token
+    if (!authSession) {
+      // Show 404 page if no WorkOS session
       const url = request.nextUrl.clone();
       url.pathname = "/404";
       return NextResponse.redirect(url);
