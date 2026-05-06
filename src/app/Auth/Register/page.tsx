@@ -179,7 +179,7 @@ export default function RegisterPage() {
               type="submit"
               variant="mybutton"
               disabled={form.formState.isSubmitting}
-              className="w-full py-6 mt-2 rounded-xl font-bold text-base shadow-md"
+              className="w-full py-6 mt-2 rounded-xl font-bold text-base shadow-md cursor-pointer"
             >
               {form.formState.isSubmitting ? "Signing Up..." : "Sign Up"}
             </Button>

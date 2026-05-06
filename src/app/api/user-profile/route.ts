@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserProfileMock, updateUserProfileMock } from '@/mock/data/user-account';
+import { encryptServer } from '@/lib/crypto-server';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const mockData = await getUserProfileMock();
-    return NextResponse.json(mockData);
+    const result = await getUserProfileMock();
+    const encrypted = encryptServer(JSON.stringify(result));
+    return NextResponse.json({ data: encrypted });
   } catch (error) {
     console.error('User Profile API Error:', error);
-    return NextResponse.json(
-      { success: false, message: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -26,13 +25,11 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const mockData = await updateUserProfileMock(name, email);
-    return NextResponse.json(mockData);
+    const result = await updateUserProfileMock(name, email);
+    const encrypted = encryptServer(JSON.stringify(result));
+    return NextResponse.json({ data: encrypted });
   } catch (error) {
     console.error('Update Profile API Error:', error);
-    return NextResponse.json(
-      { success: false, message: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: 'Internal server error' }, { status: 500 });
   }
 }

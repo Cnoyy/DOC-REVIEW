@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getReviewDocDetailMock } from '@/mock/data/reviewdoc-detail';
+import { encryptServer } from '@/lib/crypto-server';
 
 const corsHeaders = {
   'Content-Type': 'application/json',
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
 
     if (!documentId) {
       return NextResponse.json(
-        { success: false, data: null, message: 'Document ID is required' },
+        { success: false, message: 'Document ID is required' },
         { status: 400, headers: corsHeaders }
       );
     }
@@ -23,14 +24,18 @@ export async function GET(request: NextRequest) {
     const result = await getReviewDocDetailMock(documentId);
 
     if (!result.success) {
-      return NextResponse.json(result, { status: 404, headers: corsHeaders });
+      return NextResponse.json(
+        { success: false, message: result.message ?? 'Document not found' },
+        { status: 404, headers: corsHeaders }
+      );
     }
 
-    return NextResponse.json(result, { status: 200, headers: corsHeaders });
+    const encrypted = encryptServer(JSON.stringify(result));
+    return NextResponse.json({ data: encrypted }, { status: 200, headers: corsHeaders });
   } catch (error) {
     console.error('Review Doc Detail API Error:', error);
     return NextResponse.json(
-      { success: false, data: null, message: 'Failed to fetch review document detail' },
+      { success: false, message: 'Failed to fetch review document detail' },
       { status: 500, headers: corsHeaders }
     );
   }

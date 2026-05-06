@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { sendSuggestionMock } from '@/mock/data/review-actions';
+import { encryptServer } from '@/lib/crypto-server';
 
 const corsHeaders = {
   'Content-Type': 'application/json',
@@ -21,14 +22,15 @@ export async function POST(request: NextRequest) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { success: false, message: 'Validation failed', errors: validation.error.issues.map(e => e.message) },
+        { success: false, message: 'Validation failed', errors: validation.error.issues.map((e) => e.message) },
         { status: 400, headers: corsHeaders }
       );
     }
 
     const { documentId, reviewerNotes } = validation.data;
     const result = await sendSuggestionMock(documentId, reviewerNotes || '');
-    return NextResponse.json(result, { status: 200, headers: corsHeaders });
+    const encrypted = encryptServer(JSON.stringify(result));
+    return NextResponse.json({ data: encrypted }, { status: 200, headers: corsHeaders });
   } catch (error) {
     console.error('Send Suggestion API Error:', error);
     return NextResponse.json(

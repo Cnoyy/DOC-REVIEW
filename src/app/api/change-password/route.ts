@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { changePasswordMock } from '@/mock/data/user-account';
+import { encryptServer } from '@/lib/crypto-server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,13 +14,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const mockData = await changePasswordMock(currentPassword, newPassword, confirmPassword);
-    return NextResponse.json(mockData);
+    const result = await changePasswordMock(currentPassword, newPassword, confirmPassword);
+    const encrypted = encryptServer(JSON.stringify(result));
+    return NextResponse.json({ data: encrypted });
   } catch (error) {
     console.error('Change Password API Error:', error);
-    return NextResponse.json(
-      { success: false, message: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: 'Internal server error' }, { status: 500 });
   }
 }

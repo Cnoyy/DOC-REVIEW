@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDocumentsLibraryMock } from '@/mock/data/documents-library';
+import { encryptServer } from '@/lib/crypto-server';
 
 const corsHeaders = {
   'Content-Type': 'application/json',
@@ -11,11 +12,12 @@ const corsHeaders = {
 export async function GET() {
   try {
     const result = await getDocumentsLibraryMock();
-    return NextResponse.json(result, { status: 200, headers: corsHeaders });
+    const encrypted = encryptServer(JSON.stringify(result));
+    return NextResponse.json({ data: encrypted }, { status: 200, headers: corsHeaders });
   } catch (error) {
     console.error('Documents Library API Error:', error);
     return NextResponse.json(
-      { success: false, data: [], total: 0, message: 'Failed to fetch documents library' },
+      { success: false, message: 'Failed to fetch documents library' },
       { status: 500, headers: corsHeaders }
     );
   }
