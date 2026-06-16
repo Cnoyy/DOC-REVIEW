@@ -12,31 +12,43 @@ import { DocReviewLogo } from "@/components/dashboard/logo";
 
 const TOTAL_FRAMES = 240;
 
+const SCENE_ICONS = [Upload, Brain, Network, BarChart3, Workflow];
+
 const SCENES = [
   {
-    title: "Ingest & Centralize Multi-Format Informations",
-    subtitle: "Streamline raw document ingestion from emails, databases, scans, and cloud storage. Our AI-driven pipelines extract raw text, metadata, and visual structures instantly, breaking down data silos across your organization.",
-    phase: "PHASE 01 // COGNITIVE DATA CAPTURE"
+    title: "Ingest & Centralize Multi-Format Information",
+    subtitle: "Streamline raw document ingestion from emails, databases, scans, and cloud storage. Our AI-driven pipelines extract raw text, metadata, and visual structures instantly, breaking down data silos across your organization. By leveraging advanced OCR and parallel queue processing, the system handles thousands of pages concurrently, preparing unstructured data for immediate downstream analytics.",
+    phase: "PHASE 01 // COGNITIVE DATA CAPTURE",
+    statusText: "PIPELINE_ACTIVE // INGESTION_POOL_ONLINE",
+    techSpecs: ["OCR Speed: 2.4 GB/min", "Coverage: PDF, PNG, CSV, DocX", "Queue Latency: < 45ms"]
   },
   {
     title: "Intelligent Semantic Understanding",
-    subtitle: "Harness deep neural networks to automatically classify document types, map complex fields, and analyze natural language with human-like precision. Extract tables, signatures, and nested variables with zero manual effort.",
-    phase: "PHASE 02 // COGNITIVE UNDERSTANDING"
+    subtitle: "Harness deep neural networks to automatically classify document types, map complex fields, and analyze natural language with human-like precision. Extract tables, signatures, and nested variables with zero manual effort. Our cognitive engine recognizes layout patterns, deciphers handwriting, and flags discrepancies automatically, dramatically accelerating audit cycles and review workflows.",
+    phase: "PHASE 02 // COGNITIVE UNDERSTANDING",
+    statusText: "NEURAL_PARSING // EXTRACTION_ACTIVE",
+    techSpecs: ["Model Precision: 99.42%", "Layout Mapping: Enabled", "Handwriting Engine: OCR-v4"]
   },
   {
     title: "Connect & Synthesize Enterprise Knowledge",
-    subtitle: "Bridge the gaps between thousands of legacy reports, PDFs, and legal sheets. Build a unified semantic intelligence graph that maps relationships, identifies patterns, and unifies fragmented datasets.",
-    phase: "PHASE 03 // SEMANTIC KNOWLEDGE MAP"
+    subtitle: "Bridge the gaps between thousands of legacy reports, PDFs, and legal sheets. Build a unified semantic intelligence graph that maps relationships, identifies patterns, and unifies fragmented datasets. This intelligent network facilitates cross-document references, validates compliance against regulatory baselines, and builds a comprehensive cognitive repository.",
+    phase: "PHASE 03 // SEMANTIC KNOWLEDGE MAP",
+    statusText: "KNOWLEDGE_GRAPH_ONLINE // HYPER_LINKING",
+    techSpecs: ["Entity Map: 1.2M Nodes", "Cross-Reference Validation: On", "Graph Latency: < 12ms"]
   },
   {
     title: "Real-Time Analytical Intelligence",
-    subtitle: "Translate complex unstructured data into direct executive decisions. Interactive analytics, system health indicators, and key metric dashboards update dynamically as incoming workflows are processed.",
-    phase: "PHASE 04 // STRATEGIC INSIGHTS"
+    subtitle: "Translate complex unstructured data into direct executive decisions. Interactive analytics, system health indicators, and key metric dashboards update dynamically as incoming workflows are processed. Real-time visualization components display throughput rates, precision levels, and processing queues, giving your operational teams complete transparency.",
+    phase: "PHASE 04 // STRATEGIC INSIGHTS",
+    statusText: "DASHBOARD_LIVE // STREAM_CALCULATING",
+    techSpecs: ["Throughput: 120 files/sec", "Precision Ticker Update: 1s", "Error Alerting: Automated"]
   },
   {
     title: "Automate Workflow Execution",
-    subtitle: "Seamlessly deliver validated data, structured audits, and cognitive insights to your downstream CRM, ERP, and API endpoints. Enable end-to-end automation with enterprise-grade security and speed.",
-    phase: "PHASE 05 // ACTIONABLE TRANSFORMATION"
+    subtitle: "Seamlessly deliver validated data, structured audits, and cognitive insights to your downstream CRM, ERP, and API endpoints. Enable end-to-end automation with enterprise-grade security and speed. By connecting directly with webhooks, Zapier, Salesforce, and custom database instances, the platform closes the loop from ingestion to system-of-record storage.",
+    phase: "PHASE 05 // ACTIONABLE TRANSFORMATION",
+    statusText: "WORKFLOW_DISPATCH // GATEWAY_CONNECTED",
+    techSpecs: ["Integrations: Salesforce, SAP", "Webhook Callback: 8ms", "Data Security: AES-256 / SSL"]
   }
 ];
 
@@ -141,27 +153,39 @@ export default function LandingPage() {
       const imgWidth = img.width;
       const imgHeight = img.height;
 
-      const scale = Math.max(canvasWidth / imgWidth, canvasHeight / imgHeight);
-      const x = (canvasWidth - imgWidth * scale) / 2;
-      const y = (canvasHeight - imgHeight * scale) / 2;
+      const isMobileOrTablet = window.innerWidth < 1024;
+
+      // Focal Zoom on Mobile/Tablet to crop out surrounding monitor bezel & desk, zooming in on dashboard content
+      const sx = isMobileOrTablet ? imgWidth * 0.20 : 0;
+      const sy = isMobileOrTablet ? imgHeight * 0.15 : 0;
+      const sw = isMobileOrTablet ? imgWidth * 0.60 : imgWidth;
+      const sh = isMobileOrTablet ? imgHeight * 0.65 : imgHeight;
+
+      const scale = Math.max(canvasWidth / sw, canvasHeight / sh);
+      const x = (canvasWidth - sw * scale) / 2;
+      const y = (canvasHeight - sh * scale) / 2;
 
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      ctx.drawImage(img, x, y, imgWidth * scale, imgHeight * scale);
+      ctx.drawImage(img, sx, sy, sw, sh, x, y, sw * scale, sh * scale);
     };
 
     renderFrameRef.current = renderFrame;
 
-    // Initial resize using viewport width and height to prevent 0-sized client rects during hydration
+    // Initial resize supporting responsive aspect ratio resizing
     const resizeCanvas = () => {
-      canvas.width = window.innerWidth * (window.devicePixelRatio || 1);
-      canvas.height = window.innerHeight * (window.devicePixelRatio || 1);
+      const rect = canvas.getBoundingClientRect();
+      const width = rect.width || window.innerWidth;
+      const height = rect.height || window.innerHeight;
+
+      canvas.width = width * (window.devicePixelRatio || 1);
+      canvas.height = height * (window.devicePixelRatio || 1);
       
       // Re-draw current frame
       const heroContainer = heroContainerRef.current;
       if (heroContainer) {
         const heroRect = heroContainer.getBoundingClientRect();
-        const height = heroRect.height - window.innerHeight;
-        const progress = Math.max(0, Math.min(1, -heroRect.top / height));
+        const heightVal = heroRect.height - window.innerHeight;
+        const progress = Math.max(0, Math.min(1, -heroRect.top / heightVal));
         const idx = Math.floor(progress * (TOTAL_FRAMES - 1)) + 1;
         renderFrame(idx);
       } else {
@@ -318,18 +342,20 @@ export default function LandingPage() {
 
       {/* 2. Hero Section (with Scroll-driven Canvas animation) */}
       <section ref={heroContainerRef} className="relative h-[350vh] bg-slate-950 z-10">
-        <div className="sticky top-0 left-0 w-full h-screen overflow-hidden flex flex-col justify-between">
+        <div className="sticky top-20 lg:top-0 left-0 w-full h-[calc(100vh-5rem)] lg:h-screen overflow-hidden flex flex-col lg:block bg-slate-950">
           
-          {/* Hardware accelerated canvas back layer */}
-          <div className="absolute inset-0 w-full h-full z-0 bg-black">
+          {/* Hardware accelerated canvas layer */}
+          <div className="relative h-[35vh] sm:h-[40vh] lg:absolute lg:inset-0 w-full lg:h-full z-0 bg-black shrink-0">
+            {/* Crisp canvas layer (renders full bleed on desktop, and custom zoomed focus on mobile/tablet) */}
             <canvas ref={canvasRef} className="w-full h-full object-cover opacity-80" />
+            
             {/* Cinematic scanlines and dark vignette overlays */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/80 pointer-events-none"></div>
-            <div className="absolute inset-0 bg-radial-gradient(ellipse_at_center,transparent_40%,rgba(3,7,18,0.7)) pointer-events-none"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/80 pointer-events-none z-20"></div>
+            <div className="absolute inset-0 bg-radial-gradient(ellipse_at_center,transparent_40%,rgba(3,7,18,0.7)) pointer-events-none z-20"></div>
           </div>
 
           {/* Progressive Loading Indicator */}
-          <div className="relative max-w-7xl mx-auto px-6 md:px-8 pt-28 w-full z-20 flex justify-end items-start pointer-events-none">
+          <div className="absolute top-24 right-6 lg:right-8 z-30 pointer-events-none">
             {/* Elegant futuristic download ticker */}
             {totalPercentageLoaded < 100 && (
               <div className="font-mono text-[10px] text-slate-400 flex items-center gap-2 bg-slate-950/40 backdrop-blur-md px-3 py-1 rounded-full border border-slate-800/50">
@@ -339,43 +365,88 @@ export default function LandingPage() {
             )}
           </div>
 
-          {/* Elegantly positioned Editorial Text content (Top-left area) */}
-          <div className="relative max-w-7xl mx-auto px-6 md:px-8 w-full flex-1 flex flex-col justify-start py-12 z-20 pointer-events-none">
+          {/* Editorial Text content overlay (under the frame on mobile/tablet, full overlay on desktop) */}
+          <div className="relative w-full flex-1 flex flex-col justify-center items-start px-6 py-6 md:px-8 lg:absolute lg:inset-0 lg:max-w-7xl lg:mx-auto lg:px-8 lg:py-12 z-20 pointer-events-none bg-slate-950 lg:bg-transparent overflow-y-auto no-scrollbar">
             
-            {/* Top-Left Main Heading */}
-            <div className="max-w-2xl self-start mt-6 flex flex-col gap-4">
-              {/* Scene Indicator Phase Tag */}
-              <div 
-                key={`phase-${activeSceneIndex}`} 
-                className="text-cyan-400 font-mono text-xs tracking-widest animate-fade-in-up uppercase font-semibold"
-              >
-                {SCENES[activeSceneIndex].phase}
-              </div>
-              {/* Dynamic Title with blur reveal */}
+            {/* Left Main Heading Overlay (No background, no borders) */}
+            <div className="max-w-2xl flex flex-col gap-4 items-start text-left pointer-events-auto self-start">
+              {/* Dynamic Title with blur reveal and stable min-height */}
               <h1 
                 key={`title-${activeSceneIndex}`} 
-                className="text-3xl md:text-5xl font-black leading-tight tracking-tight text-white animate-fade-in-up"
-                style={{ textShadow: "0 2px 10px rgba(0,0,0,0.5)" }}
+                className="text-2xl md:text-3xl font-extrabold text-cyan-100 tracking-tight animate-fade-in-up min-h-[64px] md:min-h-[40px]"
+                style={{ 
+                  textShadow: "1px 1px 0px #0891b2, 2px 2px 0px rgba(15, 23, 42, 0.95), 3px 3px 8px rgba(0, 0, 0, 0.9)"
+                }}
               >
                 {SCENES[activeSceneIndex].title}
               </h1>
-              {/* Dynamic Professional Subtitle/Description with cascaded standard animation */}
+
+              {/* Scene Indicator Phase Tag (Simplified to only Phase number in matching cyan, moved under the heading) */}
+              <div 
+                key={`phase-${activeSceneIndex}`} 
+                className="text-cyan-400 font-mono text-[11px] tracking-widest animate-fade-in-up uppercase font-extrabold"
+                style={{ 
+                  textShadow: "0.5px 0.5px 0px rgba(15, 23, 42, 0.95), 1.5px 1.5px 3px rgba(0, 0, 0, 0.9)"
+                }}
+              >
+                {SCENES[activeSceneIndex].phase.split(" //")[0]}
+              </div>
+
+              {/* Dynamic Professional Subtitle/Description with cascaded standard animation and stable min-height */}
               <p 
                 key={`desc-${activeSceneIndex}`} 
-                className="text-slate-300/90 text-sm md:text-base leading-relaxed max-w-xl animate-fade-in-up"
+                className="text-cyan-100/80 text-xs leading-relaxed max-w-xl animate-fade-in-up min-h-[110px] sm:min-h-[88px] md:min-h-[76px]"
                 style={{ 
                   animationDelay: "0.15s",
-                  textShadow: "0 1px 5px rgba(0,0,0,0.4)" 
+                  textShadow: "0.5px 0.5px 0px rgba(15, 23, 42, 0.95), 1.5px 1.5px 3px rgba(0, 0, 0, 0.95)"
                 }}
               >
                 {SCENES[activeSceneIndex].subtitle}
               </p>
+
+              {/* Flowing Animation Pipeline Tracker (Bottom chain HUD, borderless) */}
+              <div className="flex items-center justify-between pt-2 w-full">
+                {SCENES.map((s, idx) => {
+                  const NodeIcon = SCENE_ICONS[idx];
+                  const isActive = idx === activeSceneIndex;
+                  const isCompleted = idx < activeSceneIndex;
+                  return (
+                    <div key={idx} className="flex items-center flex-1 last:flex-initial">
+                      {/* Node Icon Circle */}
+                      <div 
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-500 ${
+                          isActive 
+                            ? "bg-cyan-500/20 border border-cyan-400 text-cyan-400 shadow-md shadow-cyan-500/25 scale-110" 
+                            : isCompleted 
+                              ? "bg-blue-900/10 border border-blue-800/30 text-blue-400 scale-95" 
+                              : "bg-slate-900/50 border border-slate-800/40 text-slate-600 scale-95"
+                        }`}
+                        title={s.phase}
+                      >
+                        <NodeIcon className="w-3.5 h-3.5" />
+                      </div>
+                      
+                      {/* Flowing Connector Line */}
+                      {idx < SCENES.length - 1 && (
+                        <div className="flex-1 h-[2px] mx-2 bg-slate-800/40 relative rounded-full overflow-hidden">
+                          {idx === activeSceneIndex && (
+                            <div className="absolute top-0 bottom-0 left-0 bg-cyan-400 animate-pulse rounded-full w-full shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
+                          )}
+                          {idx < activeSceneIndex && (
+                            <div className="absolute top-0 bottom-0 left-0 bg-blue-500/60 rounded-full w-full"></div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
-          {/* Scroll to Explore Hint */}
+          {/* Scroll to Explore Hint (Desktop only) */}
           <div 
-            className={`absolute bottom-12 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1 text-slate-400 font-mono text-[9px] tracking-widest transition-all duration-700 pointer-events-none ${
+            className={`absolute bottom-12 left-1/2 -translate-x-1/2 z-30 hidden lg:flex flex-col items-center gap-1 text-slate-400 font-mono text-[9px] tracking-widest transition-all duration-700 pointer-events-none ${
               currentFrame > 15 ? "opacity-0 translate-y-4" : "opacity-70"
             }`}
           >
