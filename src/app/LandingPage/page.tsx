@@ -14,7 +14,7 @@ const TOTAL_FRAMES = 240;
 
 const SCENES = [
   {
-    title: "Ingest & Centralize Multi-Format Information",
+    title: "Ingest & Centralize Multi-Format Informations",
     subtitle: "Streamline raw document ingestion from emails, databases, scans, and cloud storage. Our AI-driven pipelines extract raw text, metadata, and visual structures instantly, breaking down data silos across your organization.",
     phase: "PHASE 01 // COGNITIVE DATA CAPTURE"
   },
